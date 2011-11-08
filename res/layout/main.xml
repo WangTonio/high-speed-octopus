@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <TableRow
+        android:id="@+id/tableRow3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
+
+        <LinearLayout
+            android:id="@+id/linearLayout1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <CheckBox
+                android:id="@+id/checkBox1"
+                android:layout_width="152dp"
+                android:layout_height="wrap_content"
+                android:text="@string/check_satellize"/>
+
+            <Button
+                android:id="@+id/button1"
+                android:layout_width="81dp"
+                android:layout_height="wrap_content"
+                android:text="@string/buttom_satelize" />
+
+            <Button
+                android:id="@+id/button2"
+                android:layout_width="83dp"
+                android:layout_height="wrap_content"
+                android:text="@string/buttom_debug" />
+
+        </LinearLayout>
+
+    </TableRow>
+
+    <TableRow
+        android:id="@+id/tableRow2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
+
+        <LinearLayout
+            android:id="@+id/linearLayout2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+        </LinearLayout>
+
+    </TableRow>
+
+    <TableRow
+        android:id="@+id/tableRow1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
+
+        <com.google.android.maps.MapView
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/mapview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:enabled="true"
+			android:apiKey="03fEvCmW-DhbDeZV30Zy9XS9cUTM0FPGxIWOOGg" android:clickable="true"/>
+    </TableRow>
+
+</TableLayout>
