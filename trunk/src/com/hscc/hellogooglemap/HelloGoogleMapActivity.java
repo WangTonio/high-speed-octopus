@@ -293,7 +293,7 @@ public class HelloGoogleMapActivity extends MapActivity {
     		break;
 		case MENU_QUICK2:
 			InputLocationDialog();
-			Toast.makeText(HelloGoogleMapActivity.this, "這個功能尚未完全實作", Toast.LENGTH_SHORT).show();
+			Toast.makeText(HelloGoogleMapActivity.this, "接下來您可以使用建立路徑來顯示", Toast.LENGTH_SHORT).show();
 			break;
 		case MENU_QUICK3:
 			
