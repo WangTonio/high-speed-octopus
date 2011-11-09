@@ -15,7 +15,7 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import android.app.Activity;
+//import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -49,7 +49,7 @@ import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
-import com.google.android.maps.Overlay;
+//import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 import com.google.android.maps.Projection;
 
@@ -63,17 +63,23 @@ public class HelloGoogleMapActivity extends MapActivity {
 	protected static final int MENU_QUIT   = Menu.FIRST+5;
 	private   static final int GEO = 1000000;
 	
+	protected static int onRecord = 0;
+	
 	GeoPoint FirstPoint;
 	
 	GeoPoint point  = new GeoPoint(19240000, -99120000);
 	GeoPoint point2 = new GeoPoint(35410000, 139460000);
 	GeoPoint taipei_station   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
 	GeoPoint taichung_station = new GeoPoint( (int)(24.136895*GEO),(int)(120.684975*GEO));
-	//default location is set to be TaichungTrainStation
+	// default location is set to be TaichungTrainStation
 	GeoPoint my_location      = new GeoPoint( (int)(24.136895*GEO),(int)(120.684975*GEO)); 
 	GeoPoint my_destination   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));;
 	private List<GeoPoint> _points = new ArrayList<GeoPoint>(); //hold the path signature
 	private List<OverlayItem> items = new ArrayList<OverlayItem>();
+	
+	private List<GeoPoint> pathPoints = new ArrayList<GeoPoint>();
+	//private GeoPoint oldLocation = new GeoPoint(0, 0);
+	//private GeoPoint newLocation = new GeoPoint(0, 0);
 	
 	protected LocationManager locationManager;
 	protected MyLocationOverlay mylayer;
@@ -88,16 +94,27 @@ public class HelloGoogleMapActivity extends MapActivity {
 	
 	protected final LocationListener LocListener = new LocationListener(){
 		public void onLocationChanged(Location location) {
-			// TODO Auto-generated method stub
+			
 			my_location = new GeoPoint((int)(location.getLatitude()*GEO),
 					                   (int)(location.getLongitude()*GEO));
-			StringBuffer msg = new StringBuffer();
+			/*StringBuffer msg = new StringBuffer();
 			msg.append("目前真正的位置: \n");
 			msg.append("緯度: ");
 			msg.append(Double.toString(location.getLatitude()));
 			msg.append("\n經度: ");
 			msg.append(Double.toString(location.getLongitude()));
 			Toast.makeText(HelloGoogleMapActivity.this, msg, Toast.LENGTH_LONG).show();
+			*/
+			if (onRecord == 1){
+				pathPoints.add(my_location);
+				List<com.google.android.maps.Overlay> ol = mapView.getOverlays();
+		        ol.add(new RecordPathOverlay());
+		        mapView.invalidate();
+			} else {
+				//
+				
+			}
+			
 		}
 
 		public void onProviderDisabled(String provider) {
@@ -128,13 +145,14 @@ public class HelloGoogleMapActivity extends MapActivity {
 	    //Setup the location service
 	    locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
 	    Criteria myCriteria = new Criteria();
-	    myCriteria.setAccuracy(Criteria.ACCURACY_FINE);
+	    myCriteria.setAccuracy(Criteria.ACCURACY_FINE);  // 只使用 GPS 的 SENSOR 
 	    myCriteria.setAltitudeRequired(false);
 	    myCriteria.setBearingRequired(false);
 	    myCriteria.setCostAllowed(true);
 	    myCriteria.setPowerRequirement(Criteria.POWER_LOW);
-	    BestProvider = locationManager.getBestProvider(myCriteria, true);
+	    BestProvider = locationManager.getBestProvider(myCriteria, true);  // 取得目前收訊最好的 SENSOR
 	    
+	    // setup showing strings for Buttons
 	    debugOut = new StringBuilder();
 	    debugOut.append("按一下OK以更新GPS資訊");
 	    Test = new StringBuilder();
@@ -147,32 +165,33 @@ public class HelloGoogleMapActivity extends MapActivity {
             mapController.setZoom(16);
         }
 	    
-	    //Button of Debug
+	    // Button of Debug
+	    // 移到目前位置的按鈕
 	    Button b;
         if( ( b = (Button) findViewById(R.id.button2) ) != null )
         {
             b.setOnClickListener(new View.OnClickListener()
             {
-            public void onClick(View v) {	
+            public void onClick(View v) {	// 顯示對話框	
             	AlertDialog alertDialog = new AlertDialog.Builder(HelloGoogleMapActivity.this).create();
             	alertDialog.setTitle("Debug");
             	alertDialog.setMessage(debugOut);
             	alertDialog.setButton("好啊！", new DialogInterface.OnClickListener(){
+            		// 當對話框按"好啊!"之後, 顯示 GPS 讀到的位置
                 	public void onClick(DialogInterface dialog, int which)
                      {
-                		locationManager.requestLocationUpdates("gps", 5000, 10, LocListener);
+                		locationManager.requestLocationUpdates("gps", 5000, 5, LocListener);
                 		Location location = locationManager.getLastKnownLocation("gps");
             			if (location != null){
             				//pop up
             				StringBuffer msg = new StringBuffer();
-            				msg.append("Debug-Latitude: ");
+            				msg.append("Latitude: ");
             				msg.append(Double.toString(location.getLatitude()));
-            				msg.append("\nDebug-Longitude: ");
+            				msg.append("\nLongitude: ");
             				msg.append(Double.toString(location.getLongitude()));
             				Toast.makeText(HelloGoogleMapActivity.this, msg, Toast.LENGTH_LONG).show();
-            				my_location = new GeoPoint((int)(location.getLatitude()*GEO) ,(int)(location.getLongitude()*GEO)); 
             			}else{
-            				Toast.makeText(HelloGoogleMapActivity.this, "您目前收不到GPS訊號(或在模擬器模式)", Toast.LENGTH_LONG).show();			
+            				Toast.makeText(HelloGoogleMapActivity.this, "您目前收不到GPS訊號。", Toast.LENGTH_LONG).show();			
             			}
                      	dialog.cancel();
                      }
@@ -182,7 +201,8 @@ public class HelloGoogleMapActivity extends MapActivity {
             });
         }
         
-        //Button of WRAP
+        // Button of WRAP
+        // 移動到台北車站的按鈕
         Button c;
         if( ( c = (Button) findViewById(R.id.button1) ) != null )
         {
@@ -194,7 +214,7 @@ public class HelloGoogleMapActivity extends MapActivity {
             	alertDialog.setMessage(Test);
             	alertDialog.setButton("好啊！", new DialogInterface.OnClickListener(){
                 	public void onClick(DialogInterface dialog, int which)
-                     {
+                    {
                 		MapView mapView = (MapView) findViewById(R.id.mapview);
                 		mapView.startLayoutAnimation();
                 		MapController mapController = mapView.getController();               		
@@ -203,15 +223,13 @@ public class HelloGoogleMapActivity extends MapActivity {
                 		Toast.makeText(HelloGoogleMapActivity.this, "您已到達台北車站", Toast.LENGTH_SHORT).show();
                 		
                      	dialog.cancel();
-                     }
+                    }
                 });
                 alertDialog.show();
              	}
             });
         }
                 
-        
-        
 	    //Satellite View CHECKBOX design
         final CheckBox checkbox = (CheckBox) findViewById(R.id.checkBox1);
         checkbox.setOnClickListener(new CheckBox.OnClickListener() {
@@ -227,9 +245,7 @@ public class HelloGoogleMapActivity extends MapActivity {
                 }
             }
         });
-	
-        
-	}
+	} // End of onCreate
 	
 	//Option of Menu->Information
 	private void openOptionsDialog(){
@@ -261,7 +277,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 			.setIcon(R.drawable.ic_menu_location);
 		menu.add(0, MENU_QUICK2, 0, "選擇座標")
 			.setIcon(R.drawable.ic_menu_to);
-		menu.add(0, MENU_QUICK3, 0, "我的最愛")
+		menu.add(0, MENU_QUICK3, 0, "記錄路徑")
 			.setIcon(R.drawable.ic_menu_star);
 		menu.add(0, MENU_QUICK4, 0, "建立路徑")
 			.setIcon(R.drawable.ic_menu_pin);
@@ -294,11 +310,18 @@ public class HelloGoogleMapActivity extends MapActivity {
     		break;
 		case MENU_QUICK2:
 			InputLocationDialog();
-			Toast.makeText(HelloGoogleMapActivity.this, "接下來您可以使用建立路徑來顯示", Toast.LENGTH_SHORT).show();
+			Toast.makeText(HelloGoogleMapActivity.this, "這個功能尚未完全實作", Toast.LENGTH_SHORT).show();
 			break;
 		case MENU_QUICK3:
+			if ( onRecord == 0){
+				onRecord = 1;
+				Toast.makeText(HelloGoogleMapActivity.this, "開始記錄您的路徑...", Toast.LENGTH_SHORT).show();
+			} else {
+				onRecord = 0;
+				pathPoints.clear();
+				Toast.makeText(HelloGoogleMapActivity.this, "已停止記錄您的路徑。", Toast.LENGTH_SHORT).show();
+			}
 			
-			Toast.makeText(HelloGoogleMapActivity.this, "這個功能尚未完全實作", Toast.LENGTH_SHORT).show();
 			break;
 		case MENU_QUICK4:
 			GetDirection(my_destination);
@@ -335,16 +358,19 @@ public class HelloGoogleMapActivity extends MapActivity {
 	}
 	
 	
-	//Deal with User input for warping
+	// Deal with User input for warping
 	private void InputLocationDialog()
 	{
+		// 呼叫新的 layout 讓使用者輸入經緯度
 		LayoutInflater factory = LayoutInflater.from(this);            
+		
+		// 定義 menu.xml 為將要顯示的 textEntryView
         final View textEntryView = factory.inflate(R.layout.menu, null);
 
 		AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
-		alert.setTitle(R.string.dialog_select_position);
-		alert.setMessage(R.string.dialog_select_inside);
+		alert.setTitle(R.string.dialog_select_position); // "選擇座標"
+		alert.setMessage(R.string.dialog_select_inside); // "請輸入欲前往的座標"
 
 		// Set an EditText view to get user input (without  textEntryView. with result in an error)
 		final EditText input_lat  = (EditText) textEntryView.findViewById(R.id.dialog_input_lat);		
@@ -513,9 +539,9 @@ public class HelloGoogleMapActivity extends MapActivity {
 /**** 以下是Overlay path產生 ****/
 	class MyMapOverlay extends com.google.android.maps.Overlay
 	{		
-	    
+		// 畫路徑
 	    @Override
-	    public boolean draw(Canvas canvas, MapView mapView,boolean shadow, long when)
+	    public boolean draw(Canvas canvas, MapView mapView, boolean shadow, long when)
 	    {
 	        super.draw(canvas, mapView, shadow);
 	        
@@ -551,6 +577,55 @@ public class HelloGoogleMapActivity extends MapActivity {
 	    }
 	}
 	
+	class RecordPathOverlay extends com.google.android.maps.Overlay
+	{
+		@Override
+		public boolean draw(Canvas canvas, MapView mapView, boolean shadow, long when)
+	    {
+	        super.draw(canvas, mapView, shadow);
+	        
+	        Projection p = mapView.getProjection();
+            Point out = new Point();
+            Path myPath = new Path();
+                          
+            Paint myPaint = new Paint();
+            myPaint.setColor(Color.GREEN);
+            myPaint.setStyle(Paint.Style.STROKE);
+            myPaint.setStrokeWidth(10);
+            myPaint.setAlpha(50);
+     
+            boolean turn = true;
+            for(GeoPoint point : pathPoints){
+            	if(turn){
+            		out = p.toPixels(point, out);
+            		myPath.moveTo(out.x, out.y);
+                    turn = false;
+            	}else{
+            		out = p.toPixels(point, out);
+                    myPath.lineTo(out.x, out.y);
+                	canvas.drawPath(myPath, myPaint);
+                	myPath.moveTo(out.x, out.y);
+                	
+            	}
+			}
+	    	/*
+			nextPaint.setColor(Color.GREEN);
+			nextPaint.setStyle(Paint.Style.STROKE);
+			nextPaint.setStrokeWidth(10);
+			nextPaint.setAlpha(50);
+			
+			pastPoint = a.toPixels(oldLocation, pastPoint);
+			nextPath.moveTo(pastPoint.x, pastPoint.y);
+			
+			nextPoint = a.toPixels(newLocation, nextPoint);
+			nextPath.lineTo(nextPoint.x, nextPoint.y);
+			
+			canvas.drawPath(nextPath, nextPaint);
+			*/
+	        return true;
+	    }
+	}
+	
 /**** 以下是 系統狀態處理 ****/
 	@Override
 	protected void onResume(){
@@ -560,7 +635,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 		if(status.isProviderEnabled(LocationManager.GPS_PROVIDER)||
 		   status.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
 			locationManager = (LocationManager)(this.getSystemService(Context.LOCATION_SERVICE));
-			locationManager.requestLocationUpdates("gps", 5000, 10, LocListener);
+			locationManager.requestLocationUpdates("gps", 1000, 0, LocListener);
 			Location location = locationManager.getLastKnownLocation("gps");
 			if (location != null){
 				//pop up
