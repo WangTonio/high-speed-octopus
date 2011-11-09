@@ -160,16 +160,17 @@ public class HelloGoogleMapActivity extends MapActivity {
             	alertDialog.setButton("好啊！", new DialogInterface.OnClickListener(){
                 	public void onClick(DialogInterface dialog, int which)
                      {
-                		locationManager.requestLocationUpdates("gps", 1000, 0, LocListener);
+                		locationManager.requestLocationUpdates("gps", 5000, 10, LocListener);
                 		Location location = locationManager.getLastKnownLocation("gps");
             			if (location != null){
             				//pop up
             				StringBuffer msg = new StringBuffer();
-            				msg.append("Latitude: ");
+            				msg.append("Debug-Latitude: ");
             				msg.append(Double.toString(location.getLatitude()));
-            				msg.append("\nLongitude: ");
+            				msg.append("\nDebug-Longitude: ");
             				msg.append(Double.toString(location.getLongitude()));
             				Toast.makeText(HelloGoogleMapActivity.this, msg, Toast.LENGTH_LONG).show();
+            				my_location = new GeoPoint((int)(location.getLatitude()*GEO) ,(int)(location.getLongitude()*GEO)); 
             			}else{
             				Toast.makeText(HelloGoogleMapActivity.this, "您目前收不到GPS訊號(或在模擬器模式)", Toast.LENGTH_LONG).show();			
             			}
@@ -559,7 +560,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 		if(status.isProviderEnabled(LocationManager.GPS_PROVIDER)||
 		   status.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
 			locationManager = (LocationManager)(this.getSystemService(Context.LOCATION_SERVICE));
-			locationManager.requestLocationUpdates("gps", 1000, 0, LocListener);
+			locationManager.requestLocationUpdates("gps", 5000, 10, LocListener);
 			Location location = locationManager.getLastKnownLocation("gps");
 			if (location != null){
 				//pop up
