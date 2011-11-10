@@ -32,11 +32,13 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -58,6 +60,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	protected static final int MENU_QUICK1 = Menu.FIRST;
 	protected static final int MENU_QUICK2 = Menu.FIRST+1;
 	protected static final int MENU_QUICK3 = Menu.FIRST+2;
+	protected static final int MENU_STOP = Menu.FIRST+6;
 	protected static final int MENU_QUICK4 = Menu.FIRST+3;
 	protected static final int MENU_ABOUT  = Menu.FIRST+4;
 	protected static final int MENU_QUIT   = Menu.FIRST+5;
@@ -73,9 +76,12 @@ public class HelloGoogleMapActivity extends MapActivity {
 	GeoPoint taichung_station = new GeoPoint( (int)(24.136895*GEO),(int)(120.684975*GEO));
 	// default location is set to be TaichungTrainStation
 	GeoPoint my_location      = new GeoPoint( (int)(24.136895*GEO),(int)(120.684975*GEO)); 
-	GeoPoint my_destination   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));;
+	GeoPoint my_destination   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
+	// 記錄使用者長按地圖所取得的位置
+	private boolean isPotentialLongPress; //記錄使用者按下了沒
+	GeoPoint my_pointTo		  = new GeoPoint( (int)(25.041111*GEO),(int)(121.516111*GEO));
 	private List<GeoPoint> _points = new ArrayList<GeoPoint>(); //hold the path signature
-	private List<OverlayItem> items = new ArrayList<OverlayItem>();
+	//private List<OverlayItem> items = new ArrayList<OverlayItem>();
 	
 	private List<GeoPoint> pathPoints = new ArrayList<GeoPoint>();
 	//private GeoPoint oldLocation = new GeoPoint(0, 0);
@@ -185,11 +191,12 @@ public class HelloGoogleMapActivity extends MapActivity {
             			if (location != null){
             				//pop up
             				StringBuffer msg = new StringBuffer();
-            				msg.append("Latitude: ");
+            				msg.append("Debug-Latitude: ");
             				msg.append(Double.toString(location.getLatitude()));
-            				msg.append("\nLongitude: ");
+            				msg.append("\nDebug-Longitude: ");
             				msg.append(Double.toString(location.getLongitude()));
             				Toast.makeText(HelloGoogleMapActivity.this, msg, Toast.LENGTH_LONG).show();
+            				my_location = new GeoPoint((int)(location.getLatitude()*GEO) ,(int)(location.getLongitude()*GEO));
             			}else{
             				Toast.makeText(HelloGoogleMapActivity.this, "您目前收不到GPS訊號。", Toast.LENGTH_LONG).show();			
             			}
@@ -272,20 +279,60 @@ public class HelloGoogleMapActivity extends MapActivity {
 	//Menu appearance
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
+		super.onCreateOptionsMenu(menu);
 		
 		menu.add(0, MENU_QUICK1, 0, "現在位置")
 			.setIcon(R.drawable.ic_menu_location);
-		menu.add(0, MENU_QUICK2, 0, "選擇座標")
+		menu.add(0, MENU_QUICK2, 1, "選擇座標")
 			.setIcon(R.drawable.ic_menu_to);
-		menu.add(0, MENU_QUICK3, 0, "記錄路徑")
+		menu.add(0, MENU_QUICK3, 2, "記錄路徑")
 			.setIcon(R.drawable.ic_menu_star);
-		menu.add(0, MENU_QUICK4, 0, "建立路徑")
+		menu.add(0, MENU_QUICK4, 3, "建立路徑")
 			.setIcon(R.drawable.ic_menu_pin);
-		menu.add(0, MENU_ABOUT , 0, "關於")
+		menu.add(0, MENU_ABOUT , 4, "關於")
 			.setIcon(R.drawable.ic_menu_info);
-		menu.add(0, MENU_QUIT  , 0, "結束")
+		menu.add(0, MENU_QUIT  , 5, "結束")
 			.setIcon(R.drawable.ic_menu_icon1);
-		return super.onCreateOptionsMenu(menu);
+		
+		menu.add(1, MENU_QUICK1, 0, "現在位置")
+			.setIcon(R.drawable.ic_menu_location);
+		menu.add(1, MENU_QUICK2, 1, "選擇座標")
+			.setIcon(R.drawable.ic_menu_to);
+		menu.add(1, MENU_STOP  , 7, "紀錄結束")
+			.setIcon(R.drawable.ic_menu_star);
+		menu.add(1, MENU_QUICK4, 4, "建立路徑")
+			.setIcon(R.drawable.ic_menu_pin);
+		menu.add(1, MENU_ABOUT , 5, "關於")
+			.setIcon(R.drawable.ic_menu_info);
+		menu.add(1, MENU_QUIT  , 6, "結束")
+			.setIcon(R.drawable.ic_menu_icon1);
+		
+		menu.setGroupVisible(0, false);
+		return true;
+	}
+	
+	//準備Menu
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu)
+	{
+	  super.onPrepareOptionsMenu(menu);
+	  
+	  switch(onRecord)
+	  {
+	  case 0:
+	    menu.setGroupVisible(1, false);
+	    menu.setGroupVisible(0, true);
+	    break;
+	  case 1:
+		menu.setGroupVisible(0, false);
+		menu.setGroupVisible(1, true);  
+	  default:
+		menu.setGroupVisible(1, false);
+		menu.setGroupVisible(0, true);
+	    break;
+	  }
+	  
+	  return true;
 	}
 	
 	//Menu implementation
@@ -336,7 +383,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 			finish();
 			break;
 		}
-		return super.onOptionsItemSelected(item);
+		return true;
 	}
 	
 
@@ -673,7 +720,54 @@ public class HelloGoogleMapActivity extends MapActivity {
 		}
 		
 	}
+
 	
+/**** 以下是 處理使用者壓住地圖時的動作 ****/	
+	@Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        handleLongPress(event);
+        return super.dispatchTouchEvent(event);
+    }
 	
-	
+	private void handleLongPress(MotionEvent event) {
+		final MotionEvent ev = event;
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            // A new touch has been detected
+ 
+            new Thread(new Runnable() {
+                public void run() {
+                    Looper.prepare();
+                    if (isLongPressDetected()) {
+                        // 偵測的長壓，在這裡處理事件
+                    	Projection p = mapView.getProjection();
+                        my_pointTo = p.fromPixels((int) ev.getX(), (int) ev.getY());
+                        Toast.makeText(HelloGoogleMapActivity.this, "已儲存您的標記", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }).start();
+        } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+            /* Do nothing*/
+        } else {
+            // This motion is something else, and thus not part of a longpress
+            isPotentialLongPress = false;
+        }
+    }
+ 
+    public boolean isLongPressDetected() {
+        isPotentialLongPress = true;
+        try {
+            for (int i = 0; i < (50); i++) {
+                Thread.sleep(10);
+                if (!isPotentialLongPress) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (InterruptedException e) {
+            return false;
+        } finally {
+            isPotentialLongPress = false;
+        }
+    }
+ 
 }
