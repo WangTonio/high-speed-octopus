@@ -60,7 +60,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	protected static final int MENU_QUICK1 = Menu.FIRST;
 	protected static final int MENU_QUICK2 = Menu.FIRST+1;
 	protected static final int MENU_QUICK3 = Menu.FIRST+2;
-	protected static final int MENU_STOP = Menu.FIRST+6;
+	protected static final int MENU_STOP   = Menu.FIRST+6;
 	protected static final int MENU_QUICK4 = Menu.FIRST+3;
 	protected static final int MENU_ABOUT  = Menu.FIRST+4;
 	protected static final int MENU_QUIT   = Menu.FIRST+5;
@@ -162,7 +162,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	    debugOut = new StringBuilder();
 	    debugOut.append("按一下OK以更新GPS資訊");
 	    Test = new StringBuilder();
-	    Test.append("要不要去台北車站\n");
+	    Test.append("移動到台北車站，不要請按返回鍵\n");
 	    
 	    if( mapView != null )
         {
@@ -298,8 +298,8 @@ public class HelloGoogleMapActivity extends MapActivity {
 			.setIcon(R.drawable.ic_menu_location);
 		menu.add(1, MENU_QUICK2, 1, "選擇座標")
 			.setIcon(R.drawable.ic_menu_to);
-		menu.add(1, MENU_STOP  , 7, "紀錄結束")
-			.setIcon(R.drawable.ic_menu_star);
+		menu.add(1, MENU_STOP  , 3, "紀錄結束")
+			.setIcon(R.drawable.ic_menu_garbage);
 		menu.add(1, MENU_QUICK4, 4, "建立路徑")
 			.setIcon(R.drawable.ic_menu_pin);
 		menu.add(1, MENU_ABOUT , 5, "關於")
@@ -322,17 +322,18 @@ public class HelloGoogleMapActivity extends MapActivity {
 	  case 0:
 	    menu.setGroupVisible(1, false);
 	    menu.setGroupVisible(0, true);
-	    break;
+	    return true;
 	  case 1:
 		menu.setGroupVisible(0, false);
-		menu.setGroupVisible(1, true);  
+		menu.setGroupVisible(1, true);
+		return true;
 	  default:
 		menu.setGroupVisible(1, false);
 		menu.setGroupVisible(0, true);
-	    break;
+		return false;
 	  }
 	  
-	  return true;
+	  
 	}
 	
 	//Menu implementation
@@ -360,6 +361,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 			Toast.makeText(HelloGoogleMapActivity.this, "這個功能尚未完全實作", Toast.LENGTH_SHORT).show();
 			break;
 		case MENU_QUICK3:
+		case MENU_STOP:
 			if ( onRecord == 0){
 				onRecord = 1;
 				Toast.makeText(HelloGoogleMapActivity.this, "開始記錄您的路徑...", Toast.LENGTH_SHORT).show();
@@ -383,7 +385,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 			finish();
 			break;
 		}
-		return true;
+		return super.onOptionsItemSelected(item);
 	}
 	
 
@@ -687,9 +689,9 @@ public class HelloGoogleMapActivity extends MapActivity {
 			if (location != null){
 				//pop up
 				StringBuffer msg = new StringBuffer();
-				msg.append("Latitude: ");
+				msg.append("目前緯度: ");
 				msg.append(Double.toString(location.getLatitude()));
-				msg.append("\nLongitude: ");
+				msg.append("\n目前經度: ");
 				msg.append(Double.toString(location.getLongitude()));
 				Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
 			}else{

@@ -4,7 +4,7 @@
     <string name="hello">地圖顯示範例應用  |  </string>
     <string name="app_name">嗨！地圖</string>
     <string name="display_taiwan">哈囉，台灣</string>
-    <string name="buttom_satelize">瞬間移動</string>
+    <string name="buttom_satelize">偵錯移動</string>
     <string name="check_satellize">衛星檢視</string>
     <string name="buttom_debug">偵錯資訊</string>
     <string name="text_display_front">這裡用來顯示一些資訊</string>
@@ -15,6 +15,6 @@
     <string name="cancel">取消</string>
     <string name="dialog_lat_title">請輸入緯度</string>
     <string name="dialog_long_title">請輸入經度</string>
-    <string name="dialog_wrap">時空門</string>
+    <string name="dialog_wrap">位移開始</string>
 
 </resources>
