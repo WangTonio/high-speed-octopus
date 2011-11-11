@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+   
+    <Button android:id="@+id/btnLock" 
+    	android:background="@drawable/web20buttonbackground" 
+    	android:layout_alignParentTop="true" 
+    	android:layout_alignParentLeft="true" 
+    	android:text="LOCK" 
+    	android:padding="5sp" android:layout_width="100sp" android:layout_height="40sp"/>
+    	
+    <Button android:id="@+id/btnUnLock" 
+	    android:layout_toRightOf="@id/btnLock"
+	    android:background="@drawable/web20buttonbackground" 
+	    android:text="UNLOCK" 
+	    android:padding="5sp" android:layout_width="100sp" android:layout_height="40sp"/>
+
+    <Button android:id="@+id/btnWake" 
+	    android:layout_toRightOf="@id/btnUnLock"
+	    android:background="@drawable/web20buttonbackground" 
+	    android:text="WAKE UP"
+	    android:padding="5sp" android:layout_width="100sp" android:layout_height="40sp"/>
+
+    <TextView android:id="@+id/tvstate" android:text="tvstate" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_below="@id/btnUnLock"/>
+   
+	<ScrollView android:layout_height="fill_parent" android:layout_width="wrap_content" android:layout_below="@id/tvstate">
+		<TextView  android:id="@+id/tvMain" android:text="tvMain" android:layout_width="fill_parent" android:layout_height="wrap_content" />
+    </ScrollView>
+     
+</RelativeLayout>
