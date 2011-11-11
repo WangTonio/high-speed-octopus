@@ -458,7 +458,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 		
 	}
 
-/**** 以下是 Google Path 要求 ****/
+/* *** 以下是 Google Path 要求 ****/
 	//The following function is made for PATH CALCULATION	
 	public List<GeoPoint> GetDirection(GeoPoint Destination)
 	{
@@ -585,7 +585,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	}
 	
 	
-/**** 以下是Overlay path產生 ****/
+/* *** 以下是Overlay path產生 ****/
 	class MyMapOverlay extends com.google.android.maps.Overlay
 	{		
 		// 畫路徑
@@ -675,7 +675,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	    }
 	}
 	
-/**** 以下是 系統狀態處理 ****/
+/* *** 以下是 系統狀態處理 ****/
 	@Override
 	protected void onResume(){
 		super.onResume();
@@ -724,7 +724,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	}
 
 	
-/**** 以下是 處理使用者壓住地圖時的動作 ****/	
+/* *** 以下是 處理使用者壓住地圖時的動作 ****/	
 	@Override
     public boolean dispatchTouchEvent(MotionEvent event) {
         handleLongPress(event);
@@ -743,14 +743,33 @@ public class HelloGoogleMapActivity extends MapActivity {
                         // 偵測的長壓，在這裡處理事件
                     	Projection p = mapView.getProjection();
                         my_pointTo = p.fromPixels((int) ev.getX(), (int) ev.getY());
-                        Toast.makeText(HelloGoogleMapActivity.this, "已儲存您的標記", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(HelloGoogleMapActivity.this, "已儲存您的標記1", Toast.LENGTH_SHORT).show();
                     }
                 }
             }).start();
         } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-            /* Do nothing*/
+        	if (event.getHistorySize() < 1)                
+        		return; // First call, no history             
+        	// Get difference in position since previous move event
+        	float diffX = event.getX()                    
+        			- event.getHistoricalX(event.getHistorySize() - 1);            
+        	float diffY = event.getY()                    
+        			- event.getHistoricalY(event.getHistorySize() - 1);             
+        	/* If position has moved substantially, this is not a long press but               
+        	 * probably a drag action */            
+        	if (Math.abs(diffX) > 1.00015f || Math.abs(diffY) > 1.000121f) {  
+        		isPotentialLongPress = false;
+        	}else{
+        		Projection p = mapView.getProjection();
+                my_pointTo = p.fromPixels((int) ev.getX(), (int) ev.getY());
+                Toast.makeText(HelloGoogleMapActivity.this, "已儲存您的標記3", Toast.LENGTH_SHORT).show();
+                isPotentialLongPress = true;
+        	}
         } else {
             // This motion is something else, and thus not part of a longpress
+        	Projection p = mapView.getProjection();
+            my_pointTo = p.fromPixels((int) ev.getX(), (int) ev.getY());
+            //Toast.makeText(HelloGoogleMapActivity.this, "已儲存您的標記2", Toast.LENGTH_SHORT).show();
             isPotentialLongPress = false;
         }
     }
