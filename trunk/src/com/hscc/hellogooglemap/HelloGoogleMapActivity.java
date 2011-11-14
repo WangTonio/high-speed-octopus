@@ -139,6 +139,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 		}
 	};
 	
+	//一開始啟動程式所執行的地方
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
 	    setContentView(R.layout.main);
@@ -171,7 +172,6 @@ public class HelloGoogleMapActivity extends MapActivity {
             mapController.setZoom(16);
         }
 	    
-	    // Button of Debug
 	    // 移到目前位置的按鈕
 	    Button b;
         if( ( b = (Button) findViewById(R.id.button2) ) != null )
@@ -208,7 +208,6 @@ public class HelloGoogleMapActivity extends MapActivity {
             });
         }
         
-        // Button of WRAP
         // 移動到台北車站的按鈕
         Button c;
         if( ( c = (Button) findViewById(R.id.button1) ) != null )
@@ -237,7 +236,7 @@ public class HelloGoogleMapActivity extends MapActivity {
             });
         }
                 
-	    //Satellite View CHECKBOX design
+	    //衛星檢視實作
         final CheckBox checkbox = (CheckBox) findViewById(R.id.checkBox1);
         checkbox.setOnClickListener(new CheckBox.OnClickListener() {
             public void onClick(View v) {
@@ -254,15 +253,15 @@ public class HelloGoogleMapActivity extends MapActivity {
         });
 	} // End of onCreate
 	
-	//Option of Menu->Information
+	//按下  Menu-> 關於 所做的事
 	private void openOptionsDialog(){
 		new AlertDialog.Builder(this)
 		.setTitle(R.string.buttom_debug)
-		.setMessage("GPS Location-based Navigation")
-		.setPositiveButton("好！", 
+		.setMessage("找路口測試實作與此，按下OK來測試")
+		.setPositiveButton("OK", 
 				new DialogInterface.OnClickListener(){
 					public void onClick(DialogInterface dialog, int which) {
-						// TODO Auto-generated method stub
+						
 						}
 					})
 		.setNegativeButton("首頁", 
@@ -276,7 +275,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 		.show();
 	}
 	
-	//Menu appearance
+	//Menu 的顯示
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
 		super.onCreateOptionsMenu(menu);
@@ -336,7 +335,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	  
 	}
 	
-	//Menu implementation
+	//實作 Menu 的 code
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
 		MapView mapView = (MapView) findViewById(R.id.mapview);
@@ -358,7 +357,7 @@ public class HelloGoogleMapActivity extends MapActivity {
     		break;
 		case MENU_QUICK2:
 			InputLocationDialog();
-			Toast.makeText(HelloGoogleMapActivity.this, "這個功能尚未完全實作", Toast.LENGTH_SHORT).show();
+			Toast.makeText(HelloGoogleMapActivity.this, "按下建立路徑便可開始移動", Toast.LENGTH_SHORT).show();
 			break;
 		case MENU_QUICK3:
 		case MENU_STOP:
@@ -396,7 +395,7 @@ public class HelloGoogleMapActivity extends MapActivity {
         mapView.invalidate();
 	}
 
-	//Move mapView to user's location now
+	//移動 mapView 到使用者現在的位置
 	private void toMyLocation() {
 		mapController.animateTo(my_location);		
 	}
@@ -407,7 +406,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	}
 	
 	
-	// Deal with User input for warping
+	//處理使用者要移動的定點(指定座標)
 	private void InputLocationDialog()
 	{
 		// 呼叫新的 layout 讓使用者輸入經緯度
@@ -445,7 +444,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 		alert.show();
 	}
 
-	//Process user's location
+	//處理使用者輸入的定點座標
 	protected void process_dialog_input(double _lat, double _long) {
 		MapView mapView = (MapView) findViewById(R.id.mapview);
 	    MapController mapController = mapView.getController();
@@ -791,4 +790,12 @@ public class HelloGoogleMapActivity extends MapActivity {
         }
     }
  
+/* *** 以下使找路口的code實作 ****/
+    public GeoPoint findIntersec (GeoPoint beforeTurn, GeoPoint afterTurn, int accurary){
+    	GeoPoint intersec = taipei_station;
+    	
+    	
+    	return intersec;
+    }
+
 }
