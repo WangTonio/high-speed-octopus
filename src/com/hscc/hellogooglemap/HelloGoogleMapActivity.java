@@ -65,7 +65,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	protected static final int MENU_ABOUT  = Menu.FIRST+4;
 	protected static final int MENU_QUIT   = Menu.FIRST+5;
 	private   static final int GEO = 1000000;
-	
+	private   FindIntersection findIntersection;
 	protected static int onRecord = 0;
 	
 	GeoPoint FirstPoint;
@@ -261,7 +261,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 		.setPositiveButton("OK", 
 				new DialogInterface.OnClickListener(){
 					public void onClick(DialogInterface dialog, int which) {
-						
+							findIntersection.findIntersec(taipei_station, taipei_station,taichung_station,1);
 						}
 					})
 		.setNegativeButton("首頁", 
@@ -790,12 +790,4 @@ public class HelloGoogleMapActivity extends MapActivity {
         }
     }
  
-/* *** 以下使找路口的code實作 ****/
-    public GeoPoint findIntersec (GeoPoint beforeTurn, GeoPoint afterTurn, int accurary){
-    	GeoPoint intersec = taipei_station;
-    	
-    	
-    	return intersec;
-    }
-
 }
