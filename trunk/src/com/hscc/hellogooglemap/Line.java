@@ -7,13 +7,14 @@ package com.hscc.hellogooglemap;
 import com.google.android.maps.GeoPoint;
 
 public class Line {
-	private static final int DIS = 1530;
-	private double paraX = 0;
-	private double paraY = 0;
-	private double middleX = 0;
-	private double middleY = 0;
-	private double fixCoord = 0;
-	public GeoPoint myReturn = null;
+	public static final double DIS = 1530.0;
+	public static final int GEO = 1000000;
+	public double paraX = 0;
+	public double paraY = 0;
+	public double middleX = 0;
+	public double middleY = 0;
+	public double fixCoord = 0;
+	public GeoPoint myReturn = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
 	
 	public Line(){
 		paraX = 30;
@@ -32,11 +33,11 @@ public class Line {
 	 * 
 	 */
 	public Line(GeoPoint before1, GeoPoint before2, GeoPoint after){
-		paraX = before1.getLatitudeE6()  - before2.getLatitudeE6();
-		paraY = before1.getLongitudeE6() - before2.getLongitudeE6();
-		middleX = (before1.getLatitudeE6() - after.getLatitudeE6() )/2;
-		middleY = (before1.getLongitudeE6()- after.getLongitudeE6())/2;
-		fixCoord = DIS / (Math.sqrt( paraX*paraX+paraY*paraY ));
+		paraX = (double) (before1.getLatitudeE6()  - before2.getLatitudeE6()  );
+		paraY = (double) (before1.getLongitudeE6() - before2.getLongitudeE6() );
+		middleX = ((double)(before2.getLatitudeE6()  - after.getLatitudeE6() ) )/2;
+		middleY = ((double)(before2.getLongitudeE6() - after.getLongitudeE6()) )/2;
+		fixCoord = DIS / (Math.sqrt( (double)(paraX*paraX + paraY*paraY) ));
 	}
 	
 	public GeoPoint Function(double var){
