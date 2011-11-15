@@ -257,13 +257,27 @@ public class HelloGoogleMapActivity extends MapActivity {
 	} // End of onCreate
 	
 	//按下  Menu-> 尋找路口  所做的事
-	private void openOptionsDialog(){
+	private void openOptionsDialog(){		
 		new AlertDialog.Builder(this)
 		.setTitle(R.string.buttom_debug)
 		.setMessage("找路口測試實作與此，按下OK來測試，如果當機那就抱歉了")
 		.setPositiveButton("OK", 
 				new DialogInterface.OnClickListener(){
 					public void onClick(DialogInterface dialog, int which) {
+						// 呼叫新的 layout 讓使用者輸入經緯度
+						//DialogInterface mylog;
+						LayoutInflater factory = LayoutInflater.from(HelloGoogleMapActivity.this);
+				        final View textEntryView = factory.inflate(R.layout.progress, null);
+				        AlertDialog.Builder alert = new AlertDialog.Builder(HelloGoogleMapActivity.this);
+				        //alert.setTitle(R.string.dialog_select_position); // "選擇座標"
+						//alert.setMessage(R.string.dialog_select_inside); // "請輸入欲前往的座標"
+						alert.setView(textEntryView);
+						alert.show();
+						alert.setPositiveButton("完成", new DialogInterface.OnClickListener() {//響應確定鍵的點擊事件
+													public void onClick(DialogInterface dialog, int which) {
+							                                      dialog.dismiss();
+							                                 }});
+						
 						findIntersection = new FindIntersection(debug_before1, debug_before2,debug_after);
 						my_intersection = findIntersection.findIntersec();
 							
