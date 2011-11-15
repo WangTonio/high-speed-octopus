@@ -69,7 +69,9 @@ public class HelloGoogleMapActivity extends MapActivity {
 	protected static int onRecord = 0;
 	
 	GeoPoint FirstPoint;
-	
+	GeoPoint debug_before1 = new GeoPoint((int)(24.144600*GEO),(int)(120.694460*GEO));
+	GeoPoint debug_before2 = new GeoPoint((int)(24.144257*GEO),(int)(120.694476*GEO));
+	GeoPoint debug_after   = new GeoPoint((int)(24.144590*GEO),(int)(120.694816*GEO));
 	GeoPoint point  = new GeoPoint(19240000, -99120000);
 	GeoPoint point2 = new GeoPoint(35410000, 139460000);
 	GeoPoint taipei_station   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
@@ -77,6 +79,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	// default location is set to be TaichungTrainStation
 	GeoPoint my_location      = new GeoPoint( (int)(24.136895*GEO),(int)(120.684975*GEO)); 
 	GeoPoint my_destination   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
+	GeoPoint my_intersection  = null;
 	// 記錄使用者長按地圖所取得的位置
 	private boolean isPotentialLongPress; //記錄使用者按下了沒
 	GeoPoint my_pointTo		  = new GeoPoint( (int)(25.041111*GEO),(int)(121.516111*GEO));
@@ -253,15 +256,30 @@ public class HelloGoogleMapActivity extends MapActivity {
         });
 	} // End of onCreate
 	
-	//按下  Menu-> 關於 所做的事
+	//按下  Menu-> 尋找路口  所做的事
 	private void openOptionsDialog(){
 		new AlertDialog.Builder(this)
 		.setTitle(R.string.buttom_debug)
-		.setMessage("找路口測試實作與此，按下OK來測試")
+		.setMessage("找路口測試實作與此，按下OK來測試，如果當機那就抱歉了")
 		.setPositiveButton("OK", 
 				new DialogInterface.OnClickListener(){
 					public void onClick(DialogInterface dialog, int which) {
-							findIntersection.findIntersec(taipei_station, taipei_station,taichung_station,1);
+						findIntersection = new FindIntersection(debug_before1, debug_before2,debug_after);
+						my_intersection = findIntersection.findIntersec();
+							
+							if(my_intersection != null){
+								if(my_intersection.equals(taipei_station)){
+									Toast.makeText(HelloGoogleMapActivity.this, "找不到路口！", Toast.LENGTH_SHORT).show();
+								}else{
+									StringBuffer msg = new StringBuffer();
+									msg.append("路口緯度: ");
+									msg.append(Double.toString( ((double)my_intersection.getLatitudeE6()   ) / GEO));
+									msg.append("\n路口經度: ");
+									msg.append(Double.toString( ((double)my_intersection.getLongitudeE6()  ) / GEO));
+									Toast.makeText(HelloGoogleMapActivity.this, msg, Toast.LENGTH_LONG).show();
+							
+								}
+							}
 						}
 					})
 		.setNegativeButton("首頁", 
@@ -288,7 +306,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 			.setIcon(R.drawable.ic_menu_star);
 		menu.add(0, MENU_QUICK4, 3, "建立路徑")
 			.setIcon(R.drawable.ic_menu_pin);
-		menu.add(0, MENU_ABOUT , 4, "關於")
+		menu.add(0, MENU_ABOUT , 4, "尋找路口")
 			.setIcon(R.drawable.ic_menu_info);
 		menu.add(0, MENU_QUIT  , 5, "結束")
 			.setIcon(R.drawable.ic_menu_icon1);
@@ -301,7 +319,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 			.setIcon(R.drawable.ic_menu_garbage);
 		menu.add(1, MENU_QUICK4, 4, "建立路徑")
 			.setIcon(R.drawable.ic_menu_pin);
-		menu.add(1, MENU_ABOUT , 5, "關於")
+		menu.add(1, MENU_ABOUT , 5, "尋找路口")
 			.setIcon(R.drawable.ic_menu_info);
 		menu.add(1, MENU_QUIT  , 6, "結束")
 			.setIcon(R.drawable.ic_menu_icon1);

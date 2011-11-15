@@ -25,29 +25,51 @@ import com.google.android.maps.OverlayItem;
 import com.hscc.hellogooglemap.HelloGoogleMapActivity.LandMarkOverlay;
 
 public class FindIntersection {
-	private static final int GEO = 1000000;
-	private List<GeoPoint> passPoint = new ArrayList<GeoPoint>(); //記錄每一次向google取得的座標點
-	private Line myLine = null;
-	
+	public static final int GEO = 1000000;
+	public List<GeoPoint> passPoint = new ArrayList<GeoPoint>(); //記錄每一次向google取得的座標點
+	public Line myLine = new Line();
+	GeoPoint before1;
+	GeoPoint before2;
+	GeoPoint after;
 	GeoPoint taipei_station   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
 	
-	public GeoPoint findIntersec (GeoPoint beforeTurn1, GeoPoint beforeTurn2,GeoPoint afterTurn, int accurary){
-    	GeoPoint intersec = null;
-    	GeoPoint nextDest = null;
-    	myLine = new Line(beforeTurn1 ,beforeTurn2, afterTurn);
-    	
-    	for(int i = 0; i < 10; i++)
+	public FindIntersection(GeoPoint beforeTurn1, GeoPoint beforeTurn2,GeoPoint afterTurn){
+		before1 = beforeTurn1;
+		before2 = beforeTurn2;
+		after   = afterTurn;
+	}
+	
+	public GeoPoint findIntersec (){
+    	GeoPoint intersec = taipei_station;
+    	GeoPoint nextDest;
+    	myLine = new Line(before1 ,before2, after);
+    	boolean keepgoing = true;
+    	for(double i = 0; (i < 50) & keepgoing; i = i + 1.0)
     	{
     		nextDest = myLine.Function(i);
-    		GetDirection(beforeTurn1, nextDest);
+    		GetDirection(before1, nextDest);
     		for(GeoPoint thistime : passPoint)
     		{
-    			if ( (thistime != beforeTurn1) && (thistime != nextDest)){
+    			if ( (thistime != before1) && (thistime != nextDest)){
     				intersec = thistime;
+    				keepgoing = false;
+    				break;
     			}
     		}
-    	}
-    	
+    		passPoint.clear();
+    		
+    		nextDest = myLine.Function(-i);
+    		GetDirection(before1, nextDest);
+    		for(GeoPoint thistime : passPoint)
+    		{
+    			if ( (thistime != before1) && (thistime != nextDest)){
+    				intersec = thistime;
+    				keepgoing = false;
+    				break;
+    			}
+    		}
+    		passPoint.clear();
+    	}    	
     	return intersec;
     }
 	
@@ -91,20 +113,20 @@ public class FindIntersection {
 	    }
 	    catch (Exception e)
 	    {
-	        Log.e("map", "MapRoute:" + e.toString());
+	        Log.e("地圖", "路線錯誤:" + e.toString());
 	    }
 
 	    return passPoint;
 	}
 
-	private String ExtraLocation(GeoPoint a){
+	public String ExtraLocation(GeoPoint a){
 		String location = "";
 		location = "" + Double.toString(((double)a.getLatitudeE6())/GEO) + "," + Double.toString(((double)a.getLongitudeE6())/GEO);
 		return location;
 	}
 	
 	//Decode google path XML
-	private void decodePolylines(String poly)
+	public void decodePolylines(String poly)
 	{
 	    int len = poly.length();
 	    int index = 0;
