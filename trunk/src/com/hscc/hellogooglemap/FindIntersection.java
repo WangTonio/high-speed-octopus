@@ -44,13 +44,13 @@ public class FindIntersection {
     	GeoPoint nextDest;
     	myLine = new Line(before1 ,before2, after);
     	boolean keepgoing = true;
-    	for(double i = 0; (i < 50) & keepgoing; i = i + 1.0)
+    	for(double i = 0; (i < 15) & keepgoing; i = i + 1.0)
     	{
     		nextDest = myLine.Function(i);
     		GetDirection(before1, nextDest);
     		for(GeoPoint thistime : passPoint)
     		{
-    			if ( (thistime != before1) && (thistime != nextDest)){
+    			if ( !(thistime.equals(before1)) && !(thistime.equals(nextDest))){
     				intersec = thistime;
     				keepgoing = false;
     				break;
@@ -62,7 +62,7 @@ public class FindIntersection {
     		GetDirection(before1, nextDest);
     		for(GeoPoint thistime : passPoint)
     		{
-    			if ( (thistime != before1) && (thistime != nextDest)){
+    			if ( !(thistime.equals(before1)) && !(thistime.equals(nextDest))){
     				intersec = thistime;
     				keepgoing = false;
     				break;
