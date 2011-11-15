@@ -44,7 +44,7 @@ public class FindIntersection {
     	GeoPoint nextDest;
     	myLine = new Line(before1 ,before2, after);
     	boolean keepgoing = true;
-    	for(double i = 0; (i < 15) & keepgoing; i = i + 1.0)
+    	for(double i = 0; (i < 0) & keepgoing; i = i + 1.0)
     	{
     		nextDest = myLine.Function(i);
     		GetDirection(before1, nextDest);
