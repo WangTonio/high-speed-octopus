@@ -40,19 +40,20 @@ public class Line {
 		middleX = ((double)(before2.getLatitudeE6()  + after.getLatitudeE6() ) )/2;
 		middleY = ((double)(before2.getLongitudeE6() + after.getLongitudeE6()) )/2;
 		fixCoord = DIS / (Math.sqrt( (double)(paraX*paraX + paraY*paraY) ));
+		/*
 		Log.e("paraX","" + paraX);
 		Log.e("paraY","" + paraY);
 		Log.e("middleX","" + middleX);
 		Log.e("middleY","" + middleY);
-		Log.e("fixCoord","" + fixCoord);
+		Log.e("fixCoord","" + fixCoord);*/
 	}
 	
 	public GeoPoint Function(double var){
 		int X,Y;
 		X = (int)(middleX + paraX * fixCoord * var);
 		Y = (int)(middleY + paraY * fixCoord * var);
-		Log.e("X","" + X);
-		Log.e("Y","" + Y);
+		Log.e("算出的X座標","" + X);
+		Log.e("算出的Y座標","" + Y);
 		myReturn = new GeoPoint(X,Y);
 		return myReturn;
 	}

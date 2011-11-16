@@ -265,48 +265,23 @@ public class HelloGoogleMapActivity extends MapActivity {
 		.setMessage("找路口測試實作與此\n按下OK來測試")
 		.setPositiveButton("OK", 
 				new DialogInterface.OnClickListener(){
-					public void onClick(DialogInterface dialog, int which) {	
-						
+					public void onClick(DialogInterface dialog, int which) {		
 						m_pDialog = new ProgressDialog(HelloGoogleMapActivity.this);
-						m_pDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-						m_pDialog.setTitle("請稍後");
-						m_pDialog.setMessage("這個動作可能會持續幾十秒");
+						m_pDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+						m_pDialog.setTitle("Confirm Request");
+						m_pDialog.setMessage("按下開始後，可能需要一點時間\n按下後，請您耐心等他跑完");
 						m_pDialog.setProgress(100);
 						m_pDialog.setIndeterminate(false);
 						m_pDialog.setCancelable(true);
-						m_pDialog.show();
-						
-						findIntersection = new FindIntersection(debug_before1, debug_before2,debug_after);
-						new Thread(){
-							public void run(){
-								try{
-									while (findIntersection.progressNow < findIntersection.progressMax){
-										 m_pDialog.setProgress(findIntersection.progressNow*100/findIntersection.progressMax);
-										 Thread.sleep(100);
-									}
-									m_pDialog.cancel();
-								}catch (InterruptedException e){
-									m_pDialog.cancel();
-								}
-							}
-						}.start();
-						my_intersection = findIntersection.findIntersec();
-							if(my_intersection != null){
-								if(my_intersection.equals(taipei_station)){
-									Toast.makeText(HelloGoogleMapActivity.this, "找不到路口！", Toast.LENGTH_SHORT).show();
-								}else{
-									StringBuffer msg = new StringBuffer();
-									msg.append("路口緯度: ");
-									msg.append(Double.toString( ((double)my_intersection.getLatitudeE6()   ) / GEO));
-									msg.append("\n路口經度: ");
-									msg.append(Double.toString( ((double)my_intersection.getLongitudeE6()  ) / GEO));
-									Toast.makeText(HelloGoogleMapActivity.this, msg, Toast.LENGTH_LONG).show();
-							
-								}
-							}
-						}
+						m_pDialog.setButton("開始", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int i){
+								findIntersection();
+								dialog.cancel();
+							}});
+						m_pDialog.show();	
+						}	
 					})
-		.setNegativeButton("首頁", 
+		.setNegativeButton("Help", 
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						Uri uri = Uri.parse("http://140.114.71.246");
@@ -447,6 +422,24 @@ public class HelloGoogleMapActivity extends MapActivity {
 	    return false;
 	}
 	
+	//尋找路口
+	public void findIntersection(){
+		findIntersection = new FindIntersection(debug_before1, debug_before2,debug_after);
+		my_intersection = findIntersection.findIntersec(false); //尋找路口，不要lookback
+		
+		if(my_intersection != null){
+			if(my_intersection.equals(taipei_station)){
+				Toast.makeText(HelloGoogleMapActivity.this, "找不到路口！", Toast.LENGTH_SHORT).show();
+			}else{
+				StringBuffer msg = new StringBuffer();
+				msg.append("路口緯度: ");
+				msg.append(Double.toString( ((double)my_intersection.getLatitudeE6()   ) / GEO));
+				msg.append("\n路口經度: ");
+				msg.append(Double.toString( ((double)my_intersection.getLongitudeE6()  ) / GEO));
+				Toast.makeText(HelloGoogleMapActivity.this, msg, Toast.LENGTH_LONG).show();
+			}
+		}
+	}
 	
 	//處理使用者要移動的定點(指定座標)
 	private void InputLocationDialog()

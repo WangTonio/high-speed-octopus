@@ -15,21 +15,14 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import android.graphics.drawable.Drawable;
 import android.util.Log;
-
 import com.google.android.maps.GeoPoint;
-import com.google.android.maps.ItemizedOverlay;
-import com.google.android.maps.OverlayItem;
-import com.hscc.hellogooglemap.HelloGoogleMapActivity.LandMarkOverlay;
 
 public class FindIntersection {
 	public static final int GEO = 1000000;
 	public List<GeoPoint> passPoint = new ArrayList<GeoPoint>(); //記錄每一次向google取得的座標點
 	public Line myLine = new Line();
-	public int progressMax = 50;
-	public int progressNow = 0;
+	public int progressMax = 5;
 	GeoPoint before1;
 	GeoPoint before2;
 	GeoPoint after;
@@ -41,7 +34,7 @@ public class FindIntersection {
 		after   = afterTurn;
 	}
 	
-	public GeoPoint findIntersec (){
+	public GeoPoint findIntersec (boolean lookback){
     	GeoPoint intersec = taipei_station;
     	GeoPoint nextDest;
     	myLine = new Line(before1 ,before2, after);
@@ -60,29 +53,27 @@ public class FindIntersection {
     			if ( !(thistime.equals(before1)) && !(thistime.equals(nextDest))){
     				intersec = thistime;
     				keepgoing = false;
-    				progressNow = progressMax;
     				Log.e("路口經度",""+intersec.getLatitudeE6() );
     				Log.e("路口緯度",""+intersec.getLongitudeE6());
     				break;
     			}
     		}
-    		progressNow++;
     		
     		passPoint.clear();
     		
-    		/*
-    		nextDest = myLine.Function(-i);
-    		GetDirection(before1, nextDest);
-    		for(GeoPoint thistime : passPoint)
-    		{
-    			if ( !(thistime.equals(before1)) && !(thistime.equals(nextDest))){
-    				intersec = thistime;
-    				keepgoing = false;
-    				break;
+    		if(lookback){
+    			nextDest = myLine.Function(-i);
+    			GetDirection(before1, nextDest);
+    			for(GeoPoint thistime : passPoint)
+    			{
+    				if ( !(thistime.equals(before1)) && !(thistime.equals(nextDest))){
+    					intersec = thistime;
+    					keepgoing = false;
+    					break;
+    				}
     			}
+    			passPoint.clear();
     		}
-    		passPoint.clear();
-    		*/
     	}    	
     	return intersec;
     }
@@ -127,7 +118,7 @@ public class FindIntersection {
 	    }
 	    catch (Exception e)
 	    {
-	        Log.e("地圖", "路線錯誤:" + "可能是 Google API Over Limit");
+	        Log.e("地圖", "路線錯誤:" + "可能是 Google API Over Limit，或是沒有這個路徑");
 	    }
 
 	    return passPoint;
@@ -175,50 +166,4 @@ public class FindIntersection {
 
 	    }
 	}
-	
-	/*
-	public class LandMarkOverlay extends ItemizedOverlay<OverlayItem>{
-
-		private List<OverlayItem> items = new ArrayList<OverlayItem>();
-		
-		public LandMarkOverlay(Drawable defaultMarker) {
-			super(defaultMarker);
-			//for(GeoPoint point : _points){
-			//	items.add(new OverlayItem(point, "HI", "這裡是路徑點"));
-			//}
-			items.add(new OverlayItem(taipei_station, "HI", "這裡是起點"));
-			items.add(new OverlayItem(my_destination, "HI", "這裡是終點"));
-			populate();
-		}
-		
-		@Override
-		protected OverlayItem createItem(int i){
-			return items.get(i);
-		}
-		
-		@Override
-		public int size(){
-			return items.size();
-		}
-		
-		@Override
-		protected boolean onTap(int pIndex){
-			Toast.makeText(HelloGoogleMapActivity.this, 
-						   "這裡是" + items.get(pIndex).getSnippet(), Toast.LENGTH_SHORT).show();
-			return true;
-		}
-		
-	}
-
-	private void formMyPath() {
-		
-		Drawable pin = getResources().getDrawable(R.drawable.cluster);
-		pin.setBounds(0,0,pin.getMinimumWidth(),pin.getMinimumHeight());
-		
-		markLayer = new LandMarkOverlay(pin);
-		mapView.getOverlays().add(markLayer);
-	}
-
-	*/
-
 }
