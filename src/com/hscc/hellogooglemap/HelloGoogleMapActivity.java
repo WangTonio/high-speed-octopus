@@ -17,6 +17,7 @@ import org.json.JSONObject;
 
 //import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -85,11 +86,12 @@ public class HelloGoogleMapActivity extends MapActivity {
 	GeoPoint my_pointTo		  = new GeoPoint( (int)(25.041111*GEO),(int)(121.516111*GEO));
 	private List<GeoPoint> _points = new ArrayList<GeoPoint>(); //hold the path signature
 	//private List<OverlayItem> items = new ArrayList<OverlayItem>();
-	
+	private ProgressDialog m_pDialog; //進度條實作
 	private List<GeoPoint> pathPoints = new ArrayList<GeoPoint>();
 	//private GeoPoint oldLocation = new GeoPoint(0, 0);
 	//private GeoPoint newLocation = new GeoPoint(0, 0);
-	
+	public int progressMax = 50;
+	public int progressNow = 0;
 	protected LocationManager locationManager;
 	protected MyLocationOverlay mylayer;
 	protected MapView mapView;
@@ -260,27 +262,35 @@ public class HelloGoogleMapActivity extends MapActivity {
 	private void openOptionsDialog(){		
 		new AlertDialog.Builder(this)
 		.setTitle(R.string.buttom_debug)
-		.setMessage("找路口測試實作與此，按下OK來測試，如果當機那就抱歉了")
+		.setMessage("找路口測試實作與此\n按下OK來測試")
 		.setPositiveButton("OK", 
 				new DialogInterface.OnClickListener(){
-					public void onClick(DialogInterface dialog, int which) {
-						// 呼叫新的 layout 讓使用者輸入經緯度
-						//DialogInterface mylog;
-						LayoutInflater factory = LayoutInflater.from(HelloGoogleMapActivity.this);
-				        final View textEntryView = factory.inflate(R.layout.progress, null);
-				        AlertDialog.Builder alert = new AlertDialog.Builder(HelloGoogleMapActivity.this);
-				        //alert.setTitle(R.string.dialog_select_position); // "選擇座標"
-						//alert.setMessage(R.string.dialog_select_inside); // "請輸入欲前往的座標"
-						alert.setView(textEntryView);
-						alert.show();
-						alert.setPositiveButton("完成", new DialogInterface.OnClickListener() {//響應確定鍵的點擊事件
-													public void onClick(DialogInterface dialog, int which) {
-							                                      dialog.dismiss();
-							                                 }});
+					public void onClick(DialogInterface dialog, int which) {	
+						
+						m_pDialog = new ProgressDialog(HelloGoogleMapActivity.this);
+						m_pDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+						m_pDialog.setTitle("請稍後");
+						m_pDialog.setMessage("這個動作可能會持續幾十秒");
+						m_pDialog.setProgress(100);
+						m_pDialog.setIndeterminate(false);
+						m_pDialog.setCancelable(true);
+						m_pDialog.show();
 						
 						findIntersection = new FindIntersection(debug_before1, debug_before2,debug_after);
+						new Thread(){
+							public void run(){
+								try{
+									while (findIntersection.progressNow < findIntersection.progressMax){
+										 m_pDialog.setProgress(findIntersection.progressNow*100/findIntersection.progressMax);
+										 Thread.sleep(100);
+									}
+									m_pDialog.cancel();
+								}catch (InterruptedException e){
+									m_pDialog.cancel();
+								}
+							}
+						}.start();
 						my_intersection = findIntersection.findIntersec();
-							
 							if(my_intersection != null){
 								if(my_intersection.equals(taipei_station)){
 									Toast.makeText(HelloGoogleMapActivity.this, "找不到路口！", Toast.LENGTH_SHORT).show();

@@ -28,6 +28,8 @@ public class FindIntersection {
 	public static final int GEO = 1000000;
 	public List<GeoPoint> passPoint = new ArrayList<GeoPoint>(); //記錄每一次向google取得的座標點
 	public Line myLine = new Line();
+	public int progressMax = 50;
+	public int progressNow = 0;
 	GeoPoint before1;
 	GeoPoint before2;
 	GeoPoint after;
@@ -44,20 +46,31 @@ public class FindIntersection {
     	GeoPoint nextDest;
     	myLine = new Line(before1 ,before2, after);
     	boolean keepgoing = true;
-    	for(double i = 0; (i < 0) & keepgoing; i = i + 1.0)
+    	for(double i = 0; (i < progressMax) & keepgoing; i = i + 1.0)
     	{
     		nextDest = myLine.Function(i);
     		GetDirection(before1, nextDest);
+    		try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
     		for(GeoPoint thistime : passPoint)
     		{
     			if ( !(thistime.equals(before1)) && !(thistime.equals(nextDest))){
     				intersec = thistime;
     				keepgoing = false;
+    				progressNow = progressMax;
+    				Log.e("路口經度",""+intersec.getLatitudeE6() );
+    				Log.e("路口緯度",""+intersec.getLongitudeE6());
     				break;
     			}
     		}
+    		progressNow++;
+    		
     		passPoint.clear();
     		
+    		/*
     		nextDest = myLine.Function(-i);
     		GetDirection(before1, nextDest);
     		for(GeoPoint thistime : passPoint)
@@ -69,6 +82,7 @@ public class FindIntersection {
     			}
     		}
     		passPoint.clear();
+    		*/
     	}    	
     	return intersec;
     }
@@ -113,7 +127,7 @@ public class FindIntersection {
 	    }
 	    catch (Exception e)
 	    {
-	        Log.e("地圖", "路線錯誤:" + e.toString());
+	        Log.e("地圖", "路線錯誤:" + "可能是 Google API Over Limit");
 	    }
 
 	    return passPoint;
