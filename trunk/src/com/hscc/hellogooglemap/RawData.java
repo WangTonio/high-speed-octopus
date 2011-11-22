@@ -6,6 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RawData{
-	public List<SenseRecord> DataList = new ArrayList<SenseRecord>();
+	public ArrayList<SenseRecord> DataList = new ArrayList<SenseRecord>();
+	
+	public RawData(){
+		
+	}
 	
 }
