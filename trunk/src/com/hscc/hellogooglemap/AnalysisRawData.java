@@ -22,7 +22,41 @@ public class AnalysisRawData {
 	}
 	
 	public void fillIntersec(){
+		counterType counter     = new counterType();
+		turnType    currentTurn = new turnType();
+		idenType	currentIden = new idenType();
 		
+		for(int index = 1; index < mySize; index ++){
+			currentTurn = isTurn(index);
+			if(currentTurn.myTurn == currentTurn.TurnLeft){
+				currentIden = identify(counter, currentTurn);
+			}else if(currentTurn.myTurn == currentTurn.TurnRight){
+				
+			}else if(currentTurn.myTurn == currentTurn.NoTurn){   //沒有轉彎
+				
+				
+			}
+		}
+		
+	}
+	
+	public idenType identify(counterType counts, turnType turn){
+		idenType returnIden = new idenType();
+		
+		if(counts.count != 0 && turn.myTurn == counts.state.myTurn){ //承接上個轉彎
+			counts.count++;
+			returnIden.keep = true;
+		}else if(counts.count == 0){ //新的轉彎
+			counts.count++;
+			counts.state.myTurn = turn.myTurn;
+			returnIden.keep = true;
+		}else{ //新的急轉彎
+			counts.count = 1;
+			counts.state.myTurn = turn.myTurn;
+			returnIden.rush = true;
+		}
+		
+		return returnIden;
 	}
 	
 	public turnType isTurn(int index){
@@ -107,7 +141,6 @@ public class AnalysisRawData {
 	public double toDeg(double number){
 		return number*180/Math.PI;
 	}
-
 	
 	//轉彎型態類別，呼叫 myTurn 來看是哪一種轉彎型態
 	class turnType{
@@ -135,6 +168,26 @@ public class AnalysisRawData {
 				return UTurn;
 			else
 				return NoTurn;
+		}
+	}
+	
+	class counterType{
+		public int count;
+		public turnType state;
+		
+		public counterType(){
+			count = 0;
+			state.myTurn = state.NoTurn;
+		}
+	}
+	
+	class idenType{
+		public boolean keep;
+		public boolean rush;
+		
+		public idenType(){
+			keep = false;
+			rush = false;
 		}
 	}
 }
