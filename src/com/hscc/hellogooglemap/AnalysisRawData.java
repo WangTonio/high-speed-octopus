@@ -3,9 +3,9 @@ package com.hscc.hellogooglemap;
 import com.google.android.maps.GeoPoint;
 
 public class AnalysisRawData {
-	public static RawData myData = new RawData();
+	public static RawData myData;
 	public int mySize = 0;                    //感測資料大小
-	public int turnLook = 20;                 //判斷是否轉彎所需要的資料量
+	public int turnLook = 10;                 //判斷是否轉彎所需要的資料量
 	public int R = 6371;                      //地球半徑(km)
 	public static final int GEO = 1000000;    //GeoPoint轉經緯度常數
 	
@@ -13,11 +13,15 @@ public class AnalysisRawData {
 	AnalysisRawData(){
 		initialization();
 	}
-	
-	
+		
 	//初始化感測資料
 	private void initialization() {
+		myData = new RawData();
 		mySize = myData.DataList.size();
+		fillIntersec();
+	}
+	
+	public void fillIntersec(){
 		
 	}
 	
@@ -28,16 +32,18 @@ public class AnalysisRawData {
 		double current_deg = 0;
 		
 		//以下for迴圈用來找出這其中最大的轉彎角
-		for(int i = -turnLook/2 ; i < turnLook/2; i++)
+		for(int i = -turnLook/2 ; i < turnLook/2; i++)	
 		{
-			if( index + i < 1 ){
+			for(int j = i; j < turnLook/2; j++){
+				if( index + i < 1 ){
 				break;
-			}
-			else{
-				current_deg = (  myData.DataList.get(i).getDirection() 
-						       - myData.DataList.get(i+1).getDirection() ) / 360.0; 
-				if (max_deg < current_deg)
-					max_deg = current_deg;
+				}
+				else{
+					current_deg = (  myData.DataList.get(j).getDirection() 
+						       		- myData.DataList.get(i).getDirection() ) / 360.0; 
+					if (max_deg < current_deg)
+						max_deg = current_deg;
+				}	
 			}	
 		}
 		
