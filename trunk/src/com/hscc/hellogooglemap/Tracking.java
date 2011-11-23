@@ -1,39 +1,39 @@
-package com.hscc.hellogooglemap;
+ï»¿package com.hscc.hellogooglemap;
 
 import java.util.ArrayList;
 import com.google.android.maps.GeoPoint;
 
 public class Tracking {
-	AnalysisRawData OriData = new AnalysisRawData();         //«Ø¥ß AnalysisRawData
-	ArrayList<SenseRecord> forwarding  = new ArrayList();    //forwarding ©Ò²£¥Íªº¸ê®Æ   
-	ArrayList<SenseRecord> backwarding = new ArrayList();    //backwarding©Ò²£¥Íªº¸ê®Æ
+	AnalysisRawData OriData = new AnalysisRawData();         //å»ºç«‹ AnalysisRawData
+	ArrayList<SenseRecord> forwarding  = new ArrayList();    //forwarding æ‰€ç”¢ç”Ÿçš„è³‡æ–™   
+	ArrayList<SenseRecord> backwarding = new ArrayList();    //backwardingæ‰€ç”¢ç”Ÿçš„è³‡æ–™
 	
 	public Tracking(){
-		// 1. ±q RawData ¤¤§ä¥X©Ò¦³ªº intersection
-		// 2. §ä¥X¤¤¶¡ÂI
+		// 1. å¾ RawData ä¸­æ‰¾å‡ºæ‰€æœ‰çš„ intersection
+		// 2. æ‰¾å‡ºä¸­é–“é»
 		// 3. startTracking
 	}
 	
 	public void startTracking(){
 		// 1. ForwardTracking
 		// 2. BackwardTracking
-		// 3. §PÂ_ F ªº²×ÂI¸ò B ªº²×ÂIªº¶ZÂ÷¬O§_¦b¦X²z½d³ò
-		// 4. ­Y¬O, ©Ò¦³ intersection ªºÂI´N½T©w¤F
-		// 5. ­Y§_....
+		// 3. åˆ¤æ–· F çš„çµ‚é»è·Ÿ B çš„çµ‚é»çš„è·é›¢æ˜¯å¦åœ¨åˆç†ç¯„åœ
+		// 4. è‹¥æ˜¯, æ‰€æœ‰ intersection çš„é»å°±ç¢ºå®šäº†
+		// 5. è‹¥å¦....
 	}
 	
 	public void ForwardTracking(GeoPoint Start, int StopIndex){
-		// 1. ±q start point ¥Xµo, ª½¨ì¹J¨ì intersection
-		// 2. ±q­ì©l¸ê®Æªº GeoPoint of intersection , §ä¥X¦a¹Ï¤W¹ïÀ³ªº  GeoPoint of intersection
-		// 3. §â¦a¹Ï¤W¹ïÀ³ªº GeoPoint of intersection ¦s¨ì RawData ùØ
-		// 4. ¥O intersection ¦¨¬°·sªº start point ­«ÂĞ Step1, ª½¨ì¨«¨ì StopIndex
+		// 1. å¾ start point å‡ºç™¼, ç›´åˆ°é‡åˆ° intersection
+		// 2. å¾åŸå§‹è³‡æ–™çš„ GeoPoint of intersection , æ‰¾å‡ºåœ°åœ–ä¸Šå°æ‡‰çš„  GeoPoint of intersection
+		// 3. æŠŠåœ°åœ–ä¸Šå°æ‡‰çš„ GeoPoint of intersection å­˜åˆ° RawData è£
+		// 4. ä»¤ intersection æˆç‚ºæ–°çš„ start point é‡è¦† Step1, ç›´åˆ°èµ°åˆ° StopIndex
 	}
 	
 	public void BackwardTracking(GeoPoint End, int StopIndex){
-		// 1. ±q End point ¥Xµo, ª½¨ì¹J¨ì intersection
-		// 2. ±q­ì©l¸ê®Æªº GeoPoint of intersection , §ä¥X¦a¹Ï¤W¹ïÀ³ªº  GeoPoint of intersection
-		// 3. §â¦a¹Ï¤W¹ïÀ³ªº GeoPoint of intersection ¦s¨ì RawData ùØ
-		// 4. ¥O intersection ¦¨¬°·sªº start point ­«ÂĞ Step1, ª½¨ì¨«¨ì StopIndex
+		// 1. å¾ End point å‡ºç™¼, ç›´åˆ°é‡åˆ° intersection
+		// 2. å¾åŸå§‹è³‡æ–™çš„ GeoPoint of intersection , æ‰¾å‡ºåœ°åœ–ä¸Šå°æ‡‰çš„  GeoPoint of intersection
+		// 3. æŠŠåœ°åœ–ä¸Šå°æ‡‰çš„ GeoPoint of intersection å­˜åˆ° RawData è£
+		// 4. ä»¤ intersection æˆç‚ºæ–°çš„ start point é‡è¦† Step1, ç›´åˆ°èµ°åˆ° StopIndex
 
 	}
 }
