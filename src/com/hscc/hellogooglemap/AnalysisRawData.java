@@ -25,16 +25,25 @@ public class AnalysisRawData {
 		counterType counter     = new counterType();
 		turnType    currentTurn = new turnType();
 		idenType	currentIden = new idenType();
+		int mid;
 		
 		for(int index = 1; index < mySize; index ++){
 			currentTurn = isTurn(index);
-			if(currentTurn.myTurn == currentTurn.TurnLeft){
+			
+			if(currentTurn.myTurn != currentTurn.NoTurn){         //有轉彎(承接上個轉彎或是新的轉彎)
 				currentIden = identify(counter, currentTurn);
-			}else if(currentTurn.myTurn == currentTurn.TurnRight){
-				
+				if(currentIden.rush){//發生rush
+					mid = (index - counter.count/2);
+					myData.DataList.get(mid).Intersection = true;
+					counter.count = 1;
+					counter.state.myTurn = currentTurn.myTurn;
+				}
 			}else if(currentTurn.myTurn == currentTurn.NoTurn){   //沒有轉彎
-				
-				
+				if(counter.count != 0){ //上一個是彎道的一部份
+					mid = (index - counter.count/2);
+					myData.DataList.get(mid).Intersection = true;
+					counter.count = 0;
+				}
 			}
 		}
 		
@@ -51,8 +60,6 @@ public class AnalysisRawData {
 			counts.state.myTurn = turn.myTurn;
 			returnIden.keep = true;
 		}else{ //新的急轉彎
-			counts.count = 1;
-			counts.state.myTurn = turn.myTurn;
 			returnIden.rush = true;
 		}
 		
@@ -62,24 +69,34 @@ public class AnalysisRawData {
 	public turnType isTurn(int index){
 		turnType turn = new turnType();
 		
-		double max_deg = 0;
-		double current_deg = 0;
+		int max_index = index-turnLook/2;
+		int min_index = index-turnLook/2;
+		double max_deg = myData.DataList.get(index-turnLook/2).getDirection();
+		double min_deg = myData.DataList.get(index-turnLook/2).getDirection();
+		double cur_deg = 0;
 		
-		//以下for迴圈用來找出這其中最大的轉彎角
-		for(int i = -turnLook/2 ; i < turnLook/2; i++)	
+		//以下for迴圈用來找出這其中最大的轉彎角 (宗憲演算法)
+		for(int i = -turnLook/2 + 1 ; i < turnLook/2; i++)	
 		{
-			for(int j = i; j < turnLook/2; j++){
-				if( index + i < 1 ){
-				break;
-				}
-				else{
-					current_deg = (  myData.DataList.get(j).getDirection() 
-						       		- myData.DataList.get(i).getDirection() ) / 360.0; 
-					if (max_deg < current_deg)
-						max_deg = current_deg;
-				}	
-			}	
+			cur_deg = myData.DataList.get(index+i).getDirection();
+			
+			if(cur_deg > max_deg){
+				max_index = index + i;
+				max_deg = cur_deg;
+			}else if( cur_deg < min_deg){
+				min_index = index + i;
+				min_deg = cur_deg;
+			}
 		}
+		
+		if(max_index > min_index){ //確認是 後index值 - 前index值
+			max_deg = (max_deg - min_deg) / 360;
+		}else{
+			max_deg = (min_deg - max_deg) / 360;
+		}
+		
+		while(max_deg < 0) //將負角轉換成正向角
+			max_deg += 360;
 		
 		//找出這個轉彎角所代表的意涵
 		turn.myTurn = turn.whichTurn(max_deg);
@@ -99,7 +116,7 @@ public class AnalysisRawData {
 		lat2 = toRad(lat2);
 
 		double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-		        Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+		           Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
 		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
 		double d = R * c;
 		return d;
