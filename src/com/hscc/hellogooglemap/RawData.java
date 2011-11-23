@@ -18,6 +18,7 @@ public class RawData{
 	public ArrayList<SenseRecord> DataList = new ArrayList<SenseRecord>();
 	
 	public RawData(){
+		
 		// 從 SD 卡開啟檔案
 		String filename = "RawData3.txt";
 		try {
@@ -26,6 +27,7 @@ public class RawData{
 						Environment.getExternalStorageDirectory() + "/" + filename);
 				
 				if (DataFile != null){
+					
 					long TimeStamp;
 					double Speed;
 					double Direction;
@@ -44,15 +46,15 @@ public class RawData{
 						for (int i = 0; i < 5; i++){
 							Speed = Double.parseDouble(arr[2]);
 							Direction = Double.parseDouble(arr[3]);
-							TimeStamp = Long.parseLong(arr[4].trim());  // 去除最後的空白
+							TimeStamp = Long.parseLong(arr[4].trim());  // 去除空白
 							SenseRecord sRecord = new SenseRecord(TimeStamp, Speed, Direction);
 							DataList.add(sRecord);
 						}
-						
 					}
 					bReader.close();
 					iStream.close();
 					DataFile.close();
+					
 				}
 			}
 		} catch (IOException e){
