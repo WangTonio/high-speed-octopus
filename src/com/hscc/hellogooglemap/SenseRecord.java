@@ -15,6 +15,7 @@ public class SenseRecord {
 		TimeStamp = timestamp;
 		Speed = speed;
 		Direction = direction;
+		Intersection = false;
 	}
 	
 	public void setLocation(GeoPoint location){
