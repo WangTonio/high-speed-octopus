@@ -15,7 +15,7 @@ import com.google.android.maps.GeoPoint;
 public class RawData{
 	GeoPoint StartPoint;
 	GeoPoint EndPoint;
-	public int totalIntersection;	// total number of intersection in this Record set.
+	public int totalIntersection = 0;	// total number of intersection in this Record set.
 	public ArrayList<SenseRecord> DataList = new ArrayList<SenseRecord>();
 	
 	public RawData(){

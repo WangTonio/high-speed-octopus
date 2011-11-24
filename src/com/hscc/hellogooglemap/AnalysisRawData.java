@@ -1,11 +1,13 @@
 package com.hscc.hellogooglemap;
 
+import android.util.Log;
+
 import com.google.android.maps.GeoPoint;
 
 public class AnalysisRawData {
-	public static RawData myData;
+	public RawData myData;
 	public int mySize = 0;                    //感測資料大小
-	public int turnLook = 10;                 //判斷是否轉彎所需要的資料量
+	public int turnLook = 6;                 //判斷是否轉彎所需要的資料量
 	public int R = 6371;                      //地球半徑(km)
 	public static final int GEO = 1000000;    //GeoPoint轉經緯度常數
 	
@@ -24,17 +26,20 @@ public class AnalysisRawData {
 	public void fillIntersec(){
 		counterType counter     = new counterType();
 		turnType    currentTurn = new turnType();
-		idenType	currentIden = new idenType();
+		boolean	isRush = false;
 		int mid;
 		
 		for(int index = 1; index < mySize; index ++){
-			currentTurn = isTurn(index);
+			isTurn(index, currentTurn);
 			
 			if(currentTurn.myTurn != currentTurn.NoTurn){         //有轉彎(承接上個轉彎或是新的轉彎)
-				currentIden = identify(counter, currentTurn);
-				if(currentIden.rush){//發生rush
+				isRush = identify(counter, currentTurn);
+				if(isRush){//發生rush
 					mid = (index - counter.count/2);
 					myData.DataList.get(mid).Intersection = true;
+					myData.totalIntersection++;
+					Log.e("路口","緯度 :" + myData.DataList.get(mid).Direction);
+					Log.e("路口","經度 :" + myData.DataList.get(mid).Speed);
 					counter.count = 1;
 					counter.state.myTurn = currentTurn.myTurn;
 				}
@@ -42,65 +47,57 @@ public class AnalysisRawData {
 				if(counter.count != 0){ //上一個是彎道的一部份
 					mid = (index - counter.count/2);
 					myData.DataList.get(mid).Intersection = true;
+					myData.totalIntersection++;
+					Log.e("路口","緯度 :" + myData.DataList.get(mid).Direction);
+					Log.e("路口","經度 :" + myData.DataList.get(mid).Speed);
 					counter.count = 0;
 				}
 			}
+			
+			
 		}
-		
 	}
 	
-	public idenType identify(counterType counts, turnType turn){
-		idenType returnIden = new idenType();
-		
+	public boolean identify(counterType counts, turnType turn){
+		boolean what = false;
 		if(counts.count != 0 && turn.myTurn == counts.state.myTurn){ //承接上個轉彎
 			counts.count++;
-			returnIden.keep = true;
 		}else if(counts.count == 0){ //新的轉彎
 			counts.count++;
 			counts.state.myTurn = turn.myTurn;
-			returnIden.keep = true;
 		}else{ //新的急轉彎
-			returnIden.rush = true;
-		}
-		
-		return returnIden;
+			what = true;
+		}		
+		return what;
 	}
 	
-	public turnType isTurn(int index){
-		turnType turn = new turnType();
+	public void isTurn(int index, turnType turn){
 		
-		int max_index = index-turnLook/2;
-		int min_index = index-turnLook/2;
-		double max_deg = myData.DataList.get(index-turnLook/2).getDirection();
-		double min_deg = myData.DataList.get(index-turnLook/2).getDirection();
+		double max_deg = 0;
 		double cur_deg = 0;
 		
 		//以下for迴圈用來找出這其中最大的轉彎角 (宗憲演算法)
-		for(int i = -turnLook/2 + 1 ; i < turnLook/2; i++)	
-		{
-			cur_deg = myData.DataList.get(index+i).getDirection();
-			
-			if(cur_deg > max_deg){
-				max_index = index + i;
-				max_deg = cur_deg;
-			}else if( cur_deg < min_deg){
-				min_index = index + i;
-				min_deg = cur_deg;
+		
+		for(int i = -turnLook/2 + 1 ; i < turnLook/2; i++){
+			if(index + i < 0 || index + i >= mySize){
+				break;
+			}
+			for(int j = i ; j < turnLook/2; i++){
+				if(index + i >= mySize){
+					break;
+				}
+				cur_deg = (  myData.DataList.get(index + j).getDirection() 
+						       - myData.DataList.get(index + i).getDirection() ) % 360;
+				if(max_deg < cur_deg)
+					max_deg = cur_deg;
 			}
 		}
 		
-		if(max_index > min_index){ //確認是 後index值 - 前index值
-			max_deg = (max_deg - min_deg) / 360;
-		}else{
-			max_deg = (min_deg - max_deg) / 360;
-		}
-		
-		while(max_deg < 0) //將負角轉換成正向角
-			max_deg += 360;
-		
+		Log.e("轉彎為","max_deg:" + max_deg);
+			
 		//找出這個轉彎角所代表的意涵
 		turn.myTurn = turn.whichTurn(max_deg);
-		return turn;
+		Log.e("轉彎為","計算:" + turn.myTurn);
 	}
 	
 	//計算兩個 GeoPoint 間的距離
@@ -167,21 +164,21 @@ public class AnalysisRawData {
 		public int NoTurn    = 3;
 		public int myTurn;
 		
-		public double turnThreshold = 10;
-		public double TurnLeftDeg = 270;
-		public double TurnRightDeg = 90;
-		public double UTurnDeg = 180;
+		public double turnThreshold = 20;
+		public double TurnLeftDeg   = 270;
+		public double TurnRightDeg  = 90;
+		public double UTurnDeg      = 180;
 		
 		public turnType(){
 			myTurn = NoTurn;
 		}
 		
 		public int whichTurn(double deg){
-			if(deg > TurnLeftDeg - turnThreshold || deg < TurnLeftDeg - turnThreshold)
+			if     (deg > TurnLeftDeg  - turnThreshold && deg < TurnLeftDeg  - turnThreshold)
 				return TurnLeft;
-			else if(deg > TurnRightDeg - turnThreshold || deg < TurnRightDeg - turnThreshold )
+			else if(deg > TurnRightDeg - turnThreshold && deg < TurnRightDeg - turnThreshold )
 				return TurnRight;
-			else if(deg > UTurnDeg - turnThreshold || deg < UTurnDeg - turnThreshold )
+			else if(deg > UTurnDeg     - turnThreshold && deg < UTurnDeg     - turnThreshold )
 				return UTurn;
 			else
 				return NoTurn;
@@ -190,7 +187,7 @@ public class AnalysisRawData {
 	
 	class counterType{
 		public int count;
-		public turnType state;
+		public turnType state = new turnType();
 		
 		public counterType(){
 			count = 0;
@@ -198,13 +195,4 @@ public class AnalysisRawData {
 		}
 	}
 	
-	class idenType{
-		public boolean keep;
-		public boolean rush;
-		
-		public idenType(){
-			keep = false;
-			rush = false;
-		}
-	}
 }
