@@ -28,13 +28,15 @@ public class FindIntersection {
 	GeoPoint after;
 	GeoPoint taipei_station   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
 	
-	public FindIntersection(GeoPoint beforeTurn1, GeoPoint beforeTurn2,GeoPoint afterTurn){
+	public FindIntersection(){
+	}
+	
+	public GeoPoint findIntersec (GeoPoint beforeTurn1, GeoPoint beforeTurn2, GeoPoint afterTurn, boolean lookback){
+		
 		before1 = beforeTurn1;
 		before2 = beforeTurn2;
 		after   = afterTurn;
-	}
-	
-	public GeoPoint findIntersec (boolean lookback){
+		
     	GeoPoint intersec = taipei_station;
     	GeoPoint nextDest;
     	myLine = new Line(before1 ,before2, after);
