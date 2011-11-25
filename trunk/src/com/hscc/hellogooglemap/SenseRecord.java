@@ -19,7 +19,7 @@ public class SenseRecord {
 	}
 	
 	public void setLocation(GeoPoint location){
-		Location = location;
+		Location = new GeoPoint(location.getLatitudeE6(), location.getLongitudeE6());
 	}
 	
 	public void setIntersection(boolean a){
