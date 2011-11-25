@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import com.google.android.maps.GeoPoint;
 
 public class Tracking {
-	public final double RECORD_INTERVAL = 0.2;   // SENSOR 每 0.2 秒記錄一筆資料
+	public static final double RECORD_INTERVAL = 0.2;   // SENSOR 每 0.2 秒記錄一筆資料
+	public static final int BEFORE_TURN_PEROID = 5;
+	public static final int AFTER_TURN_PEROID = 5;
+	
 	public AnalysisRawData AnalyzedData;
 	public ArrayList<Intersection> ForwardIntersection;
 	public ArrayList<Intersection> BackwardIntersection;
@@ -32,15 +35,16 @@ public class Tracking {
 		int numIntersection = AnalyzedData.totalIntersection;
 		int count = 0;
 		int size = AnalyzedData.myData.DataList.size();
-		GeoPoint location;
+		// GeoPoint location;
+		
 		for (int i = 0; i < size; i++){
 			if (AnalyzedData.myData.DataList.get(i).Intersection == true){
 				if (count++ < numIntersection/2){
-					location  = AnalyzedData.myData.DataList.get(i).getLocation();
-					ForwardIntersection.add(new Intersection(i, location));
+					// location  = AnalyzedData.myData.DataList.get(i).getLocation();
+					ForwardIntersection.add(new Intersection(i));
 				} else {
-					location = AnalyzedData.myData.DataList.get(i).getLocation();
-					BackwardIntersection.add(new Intersection(i, location));
+					// location = AnalyzedData.myData.DataList.get(i).getLocation();
+					BackwardIntersection.add(new Intersection(i));
 				}
 			}
 		}
@@ -76,70 +80,142 @@ public class Tracking {
 	// 4. 令 intersection 成為新的 start point 重覆 Step1, 直到走到 StopIndex	
 	public GeoPoint ForwardTracking(GeoPoint Start, int StopIndex){
 		SenseRecord record;
-		int fSize = ForwardIntersection.size();
-		int countIntersection = 0;
+		int Fsize = ForwardIntersection.size();
+		int Fi;
 		double direction;
 		double distance;
-		GeoPoint location;
+		double deltaDistance;
+		GeoPoint location, predictLocation;
+		GeoPoint beforeTurn1, beforeTurn2;
+		GeoPoint afterTurn;
+		FindIntersection iCalculator = new FindIntersection();
 		
+		Fi = 0;
 		record = AnalyzedData.myData.DataList.get(0);
 		direction = record.getDirection();
 		distance = record.getSpeed()*RECORD_INTERVAL/1000;	
 		location = AnalyzedData.findDest(StartPoint, direction, distance);
-		AnalyzedData.myData.DataList.get(0).Location = location;
-		
+		record.setLocation(location);
+	
 		for (int i = 1; i <= StopIndex; i++){
 			record = AnalyzedData.myData.DataList.get(i);
+			
 			if (record.Intersection == false){
+				
 				direction = record.getDirection();
 				distance = record.getSpeed()*RECORD_INTERVAL/1000;	
-				location = AnalyzedData.findDest(StartPoint, direction, distance);
-				AnalyzedData.myData.DataList.get(i).Location = location;
+				location = AnalyzedData.findDest(location, direction, distance);
+				record.setLocation(location);
+				
 			} else {
-				// 計算出 RawLocation, 並存進 record.Location
-				// 向 GOOGLE 找 PredictIntersection
-				// 記錄 PredictionLocation
-				// 計算 DeltaDistance
-			}
-		}
-		
-		
+				
+				if (Fi < Fsize) {
+					if(ForwardIntersection.get(Fi).Index == i){
+						
+						// 計算出 RawLocation
+						direction = record.getDirection();
+						distance = record.getSpeed()*RECORD_INTERVAL/1000;	
+						location = AnalyzedData.findDest(location, direction, distance);
+						ForwardIntersection.get(Fi).setRawLocation(location);
+						
+						// 找出轉彎前的兩個點, 以及轉彎後的一個點
+						beforeTurn1 = AnalyzedData.myData.DataList.get(i - BEFORE_TURN_PEROID).Location;
+						beforeTurn2 = AnalyzedData.myData.DataList.get(i - BEFORE_TURN_PEROID - 1).Location;
+						afterTurn = AnalyzedData.myData.DataList.get(i + AFTER_TURN_PEROID).Location;
+						
+						// 使用 FindIntersec 找出 PredictIntersection
+						predictLocation = iCalculator.findIntersec(beforeTurn1, beforeTurn2, afterTurn, true);
 
-		return Start;
+						// 記錄 PredictionLocation
+						ForwardIntersection.get(Fi).setPredictLocation(predictLocation);
+						record.setLocation(predictLocation);
+						
+						// 計算 DeltaDistance
+						deltaDistance = AnalyzedData.distance(
+											ForwardIntersection.get(Fi).PredictLocation, 
+											ForwardIntersection.get(Fi).RawLocation);
+						ForwardIntersection.get(Fi).DeltaDistance = deltaDistance;
+						
+						Fi++;
+						
+					} else { // Something wrong here
+					}
+				} else { // Error: Intersection 比預期多
+				}
+
+			}
+		} // end for
+		
+		return AnalyzedData.myData.DataList.get(StopIndex).Location;
 	}
 	
 	public GeoPoint BackwardTracking(GeoPoint End, int StopIndex){
 		SenseRecord record;
-		int bSize = BackwardIntersection.size();
+		int Bsize = BackwardIntersection.size();
+		int Bi;
 		int lastRecordIndex;
-		int countIntersection = 0;
 		double direction;
 		double distance;
-		GeoPoint location;
+		double deltaDistance;
+		GeoPoint location, predictLocation;;
+		GeoPoint beforeTurn1, beforeTurn2;
+		GeoPoint afterTurn;
+		FindIntersection iCalculator = new FindIntersection();
 		
+		Bi = Bsize - 1;
+		// 從最後一點開始 BackTracking
 		lastRecordIndex = AnalyzedData.myData.DataList.size() - 1;
 		record = AnalyzedData.myData.DataList.get(lastRecordIndex);
-		direction = (record.getDirection()+180) % 360;  // backward tracking, 方向相反
+		
+		direction = (record.getDirection()+180) % 360;  // Backward tracking, 方向相反
 		distance = record.getSpeed()*RECORD_INTERVAL/1000;	
 		location = AnalyzedData.findDest(EndPoint, direction, distance);
-		AnalyzedData.myData.DataList.get(lastRecordIndex).Location = location;
+		record.setLocation(location);
 		
 		for (int i = lastRecordIndex - 1; i >= StopIndex; i--){
 			record = AnalyzedData.myData.DataList.get(i);
 			if (record.Intersection == false){
-				direction = (record.getDirection()+180) % 360; // backward tracking, 方向相反
+				direction = (record.getDirection()+180) % 360; // Backward tracking, 方向相反
 				distance = record.getSpeed()*RECORD_INTERVAL/1000;	
-				location = AnalyzedData.findDest(StartPoint, direction, distance);
-				AnalyzedData.myData.DataList.get(i).Location = location;
+				location = AnalyzedData.findDest(location, direction, distance);
+				record.setLocation(location);
 			} else {
-				// 計算出 RawLocation, 並存進 record.Location
-				// 向 GOOGLE 找 PredictIntersection
-				// 記錄 PredictionLocation
-				// 計算 DeltaDistance
-			}
+				
+				if (Bi > 0) {
+					if(BackwardIntersection.get(Bi).Index == i){
+						
+						// 計算出 RawLocation
+						direction = (record.getDirection() + 180) % 360;	// Backward tracking, 方向相反
+						distance = record.getSpeed()*RECORD_INTERVAL/1000;	
+						location = AnalyzedData.findDest(location, direction, distance);
+						BackwardIntersection.get(Bi).setRawLocation(location);
+						
+						// 找出轉彎前的兩個點, 以及轉彎後的一個點
+						beforeTurn1 = AnalyzedData.myData.DataList.get(i + BEFORE_TURN_PEROID - 1).Location;
+						beforeTurn2 = AnalyzedData.myData.DataList.get(i + BEFORE_TURN_PEROID).Location;
+						afterTurn = AnalyzedData.myData.DataList.get(i - AFTER_TURN_PEROID).Location;
+						
+						// 使用 FindIntersec 找出 PredictIntersection
+						predictLocation = iCalculator.findIntersec(beforeTurn1, beforeTurn2, afterTurn, true);
+
+						// 記錄 PredictionLocation
+						BackwardIntersection.get(Bi).setPredictLocation(predictLocation);
+						record.setLocation(predictLocation);
+						
+						// 計算 DeltaDistance
+						deltaDistance = AnalyzedData.distance(
+											BackwardIntersection.get(Bi).PredictLocation, 
+											BackwardIntersection.get(Bi).RawLocation);
+						BackwardIntersection.get(Bi).DeltaDistance = deltaDistance;
+						
+						Bi--;
+					} else {} // 若有 Error: index 不配對
+				} else {} // 若有 Error: Intersection 數量比預期多
+
+			} // End If : record is intersection or not
 		}
 		
-		return End;
+		return AnalyzedData.myData.DataList.get(StopIndex).Location;
 	}
 	
 	class Intersection {
@@ -148,10 +224,17 @@ public class Tracking {
 		GeoPoint RawLocation;
 		GeoPoint PredictLocation;
 		
-		public Intersection(int i, GeoPoint gp){
+		public Intersection(int i){
 			Index = i;
 			DeltaDistance = 0;
-			RawLocation = gp;
+		}
+		
+		public void setRawLocation(GeoPoint gp){
+			RawLocation = new GeoPoint(gp.getLatitudeE6(), gp.getLongitudeE6());
+		}
+		
+		public void setPredictLocation (GeoPoint gp){
+			PredictLocation = new GeoPoint(gp.getLatitudeE6(), gp.getLongitudeE6());
 		}
 	}
 }
