@@ -6,6 +6,7 @@ import com.google.android.maps.GeoPoint;
 
 public class AnalysisRawData {
 	public RawData myData;
+	public int totalIntersection;
 	public int mySize = 0;                    //感測資料大小
 	public int turnLook = 6;                 //判斷是否轉彎所需要的資料量
 	public int R = 6371;                      //地球半徑(km)
