@@ -46,7 +46,7 @@ public class FindIntersection {
     		nextDest = myLine.Function(i);
     		GetDirection(before1, nextDest);
     		try {
-				Thread.sleep(100);
+				Thread.sleep(250);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -64,6 +64,11 @@ public class FindIntersection {
     		passPoint.clear();
     		
     		if(lookback){
+    			try {
+    				Thread.sleep(250);
+    			} catch (InterruptedException e) {
+    				e.printStackTrace();
+    			}
     			nextDest = myLine.Function(-i);
     			GetDirection(before1, nextDest);
     			for(GeoPoint thistime : passPoint)
