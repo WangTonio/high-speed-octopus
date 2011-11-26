@@ -40,8 +40,8 @@ public class AnalysisRawData {
 					myData.DataList.get(mid).Intersection = true;
 					totalIntersection++;
 					myData.totalIntersection++;
-					Log.e("路口","緯度 :" + myData.DataList.get(mid).Direction);
-					Log.e("路口","經度 :" + myData.DataList.get(mid).Speed);
+					Log.d("路口","該點 TimeStamp :" + myData.DataList.get(mid).getTimeStamp());
+					//Log.d("路口","速度 :" + myData.DataList.get(mid).Speed);
 					counter.count = 1;
 					counter.state.myTurn = currentTurn.myTurn;
 				}
@@ -50,12 +50,11 @@ public class AnalysisRawData {
 					mid = (index - counter.count/2);
 					myData.DataList.get(mid).Intersection = true;
 					myData.totalIntersection++;
-					Log.e("路口","緯度 :" + myData.DataList.get(mid).Direction);
-					Log.e("路口","經度 :" + myData.DataList.get(mid).Speed);
+					Log.d("路口","該點 TimeStamp :" + myData.DataList.get(mid).getTimeStamp());
+					//Log.d("路口","速度 :" + myData.DataList.get(mid).Speed);
 					counter.count = 0;
 				}
 			}
-			
 			
 		}
 	}
@@ -77,28 +76,34 @@ public class AnalysisRawData {
 		
 		double max_deg = 0;
 		double cur_deg = 0;
+		int max_dis = 0;
 		
 		//以下for迴圈用來找出這其中最大的轉彎角 (宗憲演算法)
 		
-		for(int i = -turnLook/2 + 1 ; i < turnLook/2; i++){
+		for(int i = -turnLook/2 + 1 ; i <= turnLook/2; i++){
 			if(index + i < 0 || index + i >= mySize){
 				break;
 			}
-			for(int j = i ; j < turnLook/2; i++){
-				if(index + i >= mySize){
+			for(int j = i+1 ; j <= turnLook/2; j++){
+				if(index + j < 0 || index + j >= mySize){
 					break;
 				}
 				cur_deg = (  myData.DataList.get(index + j).getDirection() 
-						       - myData.DataList.get(index + i).getDirection() ) % 360;
+						   - myData.DataList.get(index + i).getDirection() );
+				if(cur_deg < 0)
+					cur_deg += 360;
 				if(cur_deg > 190)
 					cur_deg -= 180;
-				if(max_deg < cur_deg)
+				if(max_deg < cur_deg){
 					max_deg = cur_deg;
+					max_dis = j;
+				}
 			}
 		}
 	
 		//找出這個轉彎角所代表的意涵
 		turn.myTurn = turn.whichTurn(max_deg);
+		turn.final_index = max_dis;
 	}
 	
 	//計算兩個 GeoPoint 間的距離
@@ -169,6 +174,8 @@ public class AnalysisRawData {
 		public double TurnLeftDeg   = 270;
 		public double TurnRightDeg  = 90;
 		public double UTurnDeg      = 180;
+		
+		public int final_index = 0;
 		
 		public turnType(){
 			myTurn = NoTurn;
