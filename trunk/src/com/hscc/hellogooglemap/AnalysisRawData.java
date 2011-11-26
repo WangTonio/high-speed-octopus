@@ -38,6 +38,7 @@ public class AnalysisRawData {
 				if(isRush){//發生rush
 					mid = (index - counter.count/2);
 					myData.DataList.get(mid).Intersection = true;
+					totalIntersection++;
 					myData.totalIntersection++;
 					Log.e("路口","緯度 :" + myData.DataList.get(mid).Direction);
 					Log.e("路口","經度 :" + myData.DataList.get(mid).Speed);
@@ -89,6 +90,8 @@ public class AnalysisRawData {
 				}
 				cur_deg = (  myData.DataList.get(index + j).getDirection() 
 						       - myData.DataList.get(index + i).getDirection() ) % 360;
+				if(cur_deg > 190)
+					cur_deg -= 180;
 				if(max_deg < cur_deg)
 					max_deg = cur_deg;
 			}
@@ -165,7 +168,7 @@ public class AnalysisRawData {
 		public int NoTurn    = 3;
 		public int myTurn;
 		
-		public double turnThreshold = 20;
+		public double turnThreshold = 35;
 		public double TurnLeftDeg   = 270;
 		public double TurnRightDeg  = 90;
 		public double UTurnDeg      = 180;
@@ -175,11 +178,11 @@ public class AnalysisRawData {
 		}
 		
 		public int whichTurn(double deg){
-			if     (deg > TurnLeftDeg  - turnThreshold && deg < TurnLeftDeg  - turnThreshold)
+			if     ((deg > (TurnLeftDeg  - turnThreshold)) && (deg < (TurnLeftDeg  + turnThreshold)))
 				return TurnLeft;
-			else if(deg > TurnRightDeg - turnThreshold && deg < TurnRightDeg - turnThreshold )
+			else if((deg > (TurnRightDeg  - turnThreshold)) && (deg < (TurnRightDeg  + turnThreshold)))
 				return TurnRight;
-			else if(deg > UTurnDeg     - turnThreshold && deg < UTurnDeg     - turnThreshold )
+			else if((deg > (UTurnDeg  - turnThreshold)) && (deg < (UTurnDeg  + turnThreshold)))
 				return UTurn;
 			else
 				return NoTurn;
