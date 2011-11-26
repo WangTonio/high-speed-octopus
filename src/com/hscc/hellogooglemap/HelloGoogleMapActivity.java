@@ -154,6 +154,8 @@ public class HelloGoogleMapActivity extends MapActivity {
 	    mapView.setBuiltInZoomControls(true);
 	    mapController = mapView.getController();
 	    
+	    AnalysisRawData my = new AnalysisRawData();
+	    
 	    //Setup the location service
 	    locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
 	    Criteria myCriteria = new Criteria();
@@ -424,8 +426,8 @@ public class HelloGoogleMapActivity extends MapActivity {
 	
 	//尋找路口
 	public void findIntersection(){
-		findIntersection = new FindIntersection(debug_before1, debug_before2,debug_after);
-		my_intersection = findIntersection.findIntersec(false); //尋找路口，不要lookback
+		findIntersection = new FindIntersection();
+		my_intersection = findIntersection.findIntersec(debug_before1, debug_before2,debug_after,false); //尋找路口，不要lookback
 		
 		if(my_intersection != null){
 			if(my_intersection.equals(taipei_station)){

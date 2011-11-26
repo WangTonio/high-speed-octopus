@@ -44,13 +44,11 @@ public class RawData{
 						String[] arr = InputLine.split("  ");						
 						
 						// 把 array 裏的資料加到 list 裏
-						for (int i = 0; i < 5; i++){
 							Speed = Double.parseDouble(arr[2]);
 							Direction = Double.parseDouble(arr[3]);
 							TimeStamp = Long.parseLong(arr[4].trim());  // 去除空白
 							SenseRecord sRecord = new SenseRecord(TimeStamp, Speed, Direction);
 							DataList.add(sRecord);
-						}
 					}
 					bReader.close();
 					iStream.close();
