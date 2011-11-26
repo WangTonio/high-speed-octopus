@@ -96,12 +96,9 @@ public class AnalysisRawData {
 					max_deg = cur_deg;
 			}
 		}
-		
-		Log.e("轉彎為","max_deg:" + max_deg);
-			
+	
 		//找出這個轉彎角所代表的意涵
 		turn.myTurn = turn.whichTurn(max_deg);
-		Log.e("轉彎為","計算:" + turn.myTurn);
 	}
 	
 	//計算兩個 GeoPoint 間的距離
