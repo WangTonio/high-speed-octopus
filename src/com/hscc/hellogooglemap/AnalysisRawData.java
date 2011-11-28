@@ -8,8 +8,8 @@ public class AnalysisRawData {
 	public RawData myData;
 	public int totalIntersection;
 	public int mySize = 0;                    //感測資料大小
-	public int turnLook = 6;                 //判斷是否轉彎所需要的資料量
-	public int R = 6371;                      //地球半徑(km)
+	public int turnLook = 6;                  //判斷是否轉彎所需要的資料量
+	public double R = 6371;                   //地球半徑(km)
 	public static final int GEO = 1000000;    //GeoPoint轉經緯度常數
 	
 	//預設建構子
@@ -108,18 +108,17 @@ public class AnalysisRawData {
 	
 	//計算兩個 GeoPoint 間的距離
 	public double distance(GeoPoint start, GeoPoint dest){
-		double lat1 = start.getLatitudeE6()/GEO;
-		double lat2 = dest.getLatitudeE6()/GEO;
-		double lon1 = start.getLongitudeE6()/GEO;
-		double lon2 = dest.getLongitudeE6()/GEO;
-		
-		double dLat = toRad((lat2-lat1));
-		double dLon = toRad((lon2-lon1));
-		lat1 = toRad(lat1);
-		lat2 = toRad(lat2);
+		double lat1 = toRad((double)start.getLatitudeE6()/GEO);
+		double lat2 = toRad((double)dest.getLatitudeE6() /GEO);
+		double lon1 = toRad((double)start.getLongitudeE6()/GEO);
+		double lon2 = toRad((double)dest.getLongitudeE6() /GEO);
+
+		double dLat = (lat2-lat1);
+		double dLon = (lon2-lon1);
 
 		double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
 		           Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+
 		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
 		double d = R * c;
 		return d;
@@ -127,41 +126,48 @@ public class AnalysisRawData {
 	
 	//計算兩個 GeoPoint 間的夾角
 	public double bearing(GeoPoint start, GeoPoint dest){
-		double lat1 = start.getLatitudeE6()/GEO;
-		double lat2 = dest.getLatitudeE6()/GEO;
-		double lon1 = start.getLongitudeE6()/GEO;
-		double lon2 = dest.getLongitudeE6()/GEO;
-		double dLon = toRad((lon2-lon1));
+		double lat1 = toRad((double)start.getLatitudeE6()/GEO);
+		double lat2 = toRad((double)dest.getLatitudeE6() /GEO);
+		double lon1 = toRad((double)start.getLongitudeE6()/GEO);
+		double lon2 = toRad((double)dest.getLongitudeE6() /GEO);
+		double dLon = (lon2-lon1);
 
 		double y = Math.sin(dLon) * Math.cos(lat2);
 		double x = Math.cos(lat1)*Math.sin(lat2) -
-		        Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
-		return toDeg(Math.atan2(y, x));
+		           Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+		double answer = toDeg(Math.atan2(y, x));
+		
+		if(answer < 0)
+			answer += 360;
+		
+		return answer;
 	}
 	
 	//計算 一個 GeoPoint 作為起點  bearing(弧度) 作為方向 走了長度d(km)  所產生的目的座標
 	public GeoPoint findDest(GeoPoint start, double brng, double d){
-		double lat1 = start.getLatitudeE6()/GEO;
-		double lon1 = start.getLongitudeE6()/GEO;
+		double lat1 = toRad((double)start.getLatitudeE6()/GEO);
+		double lon1 = toRad((double)start.getLongitudeE6()/GEO);
 		
+		brng = toRad(brng);
 		double d_div_r = toRad((d/R));
 		
 		double lat2 = Math.asin( Math.sin(lat1)*Math.cos(d_div_r) + 
-                Math.cos(lat1)*Math.sin(d_div_r)*Math.cos(brng) );
+                      Math.cos(lat1)*Math.sin(d_div_r)*Math.cos(brng) );
 		double lon2 = lon1 + Math.atan2(Math.sin(brng)*Math.sin(d_div_r)*Math.cos(lat1), 
-                       Math.cos(d_div_r)-Math.sin(lat1)*Math.sin(lat2));
-		
+                             Math.cos(d_div_r)-Math.sin(lat1)*Math.sin(lat2));
+		lat2 = toDeg(lat2);
+		lon2 = toDeg(lon2);
 		return (new GeoPoint((int)(lat2*GEO),(int)(lon2*GEO)));
 	}
 	
 	//轉成弧度
 	public double toRad(double number){
-		return number*Math.PI/180;
+		return number*Math.PI/180.0;
 	}
 	
 	//轉成角度
 	public double toDeg(double number){
-		return number*180/Math.PI;
+		return number*180.0/Math.PI;
 	}
 	
 	//轉彎型態類別，呼叫 myTurn 來看是哪一種轉彎型態
@@ -203,6 +209,15 @@ public class AnalysisRawData {
 			count = 0;
 			state.myTurn = state.NoTurn;
 		}
+	}
+	
+	public void testFunction(){
+		GeoPoint start = new GeoPoint(24799377,120992149);
+		GeoPoint dest  = new GeoPoint(24796942,120993557);
+		GeoPoint test  = findDest(dest,18.38944444,3*0.001);
+		Log.d("距離","" + distance(start,dest) + "公里");
+		Log.d("角度","" + bearing(start,dest) + "度");
+		Log.d("末點","緯度:" + (double)test.getLatitudeE6()/GEO + "  經度" + (double)test.getLongitudeE6()/GEO);
 	}
 	
 }
