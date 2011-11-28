@@ -111,7 +111,7 @@ public class AnalysisRawData {
 		double lat1 = start.getLatitudeE6()/GEO;
 		double lat2 = dest.getLatitudeE6()/GEO;
 		double lon1 = start.getLongitudeE6()/GEO;
-		double lon2 = start.getLongitudeE6()/GEO;
+		double lon2 = dest.getLongitudeE6()/GEO;
 		
 		double dLat = toRad((lat2-lat1));
 		double dLon = toRad((lon2-lon1));
@@ -130,7 +130,7 @@ public class AnalysisRawData {
 		double lat1 = start.getLatitudeE6()/GEO;
 		double lat2 = dest.getLatitudeE6()/GEO;
 		double lon1 = start.getLongitudeE6()/GEO;
-		double lon2 = start.getLongitudeE6()/GEO;
+		double lon2 = dest.getLongitudeE6()/GEO;
 		double dLon = toRad((lon2-lon1));
 
 		double y = Math.sin(dLon) * Math.cos(lat2);
@@ -139,15 +139,17 @@ public class AnalysisRawData {
 		return toDeg(Math.atan2(y, x));
 	}
 	
-	//計算 一個 GeoPoint 作為起點  bearing 作為方向 走了長度d(km)  所產生的目的座標
+	//計算 一個 GeoPoint 作為起點  bearing(弧度) 作為方向 走了長度d(km)  所產生的目的座標
 	public GeoPoint findDest(GeoPoint start, double brng, double d){
 		double lat1 = start.getLatitudeE6()/GEO;
 		double lon1 = start.getLongitudeE6()/GEO;
 		
-		double lat2 = Math.asin( Math.sin(lat1)*Math.cos(d/R) + 
-                Math.cos(lat1)*Math.sin(d/R)*Math.cos(brng) );
-		double lon2 = lon1 + Math.atan2(Math.sin(brng)*Math.sin(d/R)*Math.cos(lat1), 
-                       Math.cos(d/R)-Math.sin(lat1)*Math.sin(lat2));
+		double d_div_r = toRad((d/R));
+		
+		double lat2 = Math.asin( Math.sin(lat1)*Math.cos(d_div_r) + 
+                Math.cos(lat1)*Math.sin(d_div_r)*Math.cos(brng) );
+		double lon2 = lon1 + Math.atan2(Math.sin(brng)*Math.sin(d_div_r)*Math.cos(lat1), 
+                       Math.cos(d_div_r)-Math.sin(lat1)*Math.sin(lat2));
 		
 		return (new GeoPoint((int)(lat2*GEO),(int)(lon2*GEO)));
 	}
