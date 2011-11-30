@@ -149,12 +149,12 @@ public class AnalysisRawData {
 		double lon1 = toRad((double)start.getLongitudeE6()/GEO);
 		
 		brng = toRad(brng);
-		double d_div_r = toRad((d/R));
+		double d_div_r = d/R;
 		
 		double lat2 = Math.asin( Math.sin(lat1)*Math.cos(d_div_r) + 
-                      Math.cos(lat1)*Math.sin(d_div_r)*Math.cos(brng) );
+                                 Math.cos(lat1)*Math.sin(d_div_r)*Math.cos(brng) );
 		double lon2 = lon1 + Math.atan2(Math.sin(brng)*Math.sin(d_div_r)*Math.cos(lat1), 
-                             Math.cos(d_div_r)-Math.sin(lat1)*Math.sin(lat2));
+                                        Math.cos(d_div_r)-Math.sin(lat1)*Math.sin(lat2));
 		lat2 = toDeg(lat2);
 		lon2 = toDeg(lon2);
 		return (new GeoPoint((int)(lat2*GEO),(int)(lon2*GEO)));
@@ -214,7 +214,7 @@ public class AnalysisRawData {
 	public void testFunction(){
 		GeoPoint start = new GeoPoint(24799377,120992149);
 		GeoPoint dest  = new GeoPoint(24796942,120993557);
-		GeoPoint test  = findDest(dest,18.38944444,3*0.001);
+		GeoPoint test  = findDest(dest,18.389444,3);
 		Log.d("距離","" + distance(start,dest) + "公里");
 		Log.d("角度","" + bearing(start,dest) + "度");
 		Log.d("末點","緯度:" + (double)test.getLatitudeE6()/GEO + "  經度" + (double)test.getLongitudeE6()/GEO);
