@@ -4,52 +4,6 @@
     android:layout_height="match_parent" >
 
     <TableRow
-        android:id="@+id/tableRow3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
-
-        <LinearLayout
-            android:id="@+id/linearLayout1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" >
-
-            <CheckBox
-                android:id="@+id/checkBox1"
-                android:layout_width="152dp"
-                android:layout_height="wrap_content"
-                android:text="@string/check_satellize"/>
-
-            <Button
-                android:id="@+id/button1"
-                android:layout_width="81dp"
-                android:layout_height="wrap_content"
-                android:text="@string/buttom_satelize" />
-
-            <Button
-                android:id="@+id/button2"
-                android:layout_width="83dp"
-                android:layout_height="wrap_content"
-                android:text="@string/buttom_debug" />
-
-        </LinearLayout>
-
-    </TableRow>
-
-    <TableRow
-        android:id="@+id/tableRow2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
-
-        <LinearLayout
-            android:id="@+id/linearLayout2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" >
-
-        </LinearLayout>
-
-    </TableRow>
-
-    <TableRow
         android:id="@+id/tableRow1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" >

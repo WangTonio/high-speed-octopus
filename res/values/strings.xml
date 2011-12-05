@@ -17,5 +17,6 @@
     <string name="dialog_long_title">請輸入經度</string>
     <string name="dialog_wrap">位移開始</string>
     <string name="pleasewait">請稍等..這個動作可能會消耗數十秒</string>
+    <string name="OBD_dialog">請問您要使用感測器的資料或是OBD車上診斷系統的資料作分析？</string>
 
 </resources>
