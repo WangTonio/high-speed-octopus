@@ -13,13 +13,13 @@ public class AnalysisRawData {
 	public static final int GEO = 1000000;    //GeoPoint轉經緯度常數
 	
 	//預設建構子
-	AnalysisRawData(){
-		initialization();
+	AnalysisRawData(boolean useOBD){
+		initialization(useOBD);
 	}
 		
 	//初始化感測資料
-	private void initialization() {
-		myData = new RawData();
+	private void initialization(boolean useOBD) {
+		myData = new RawData(useOBD);
 		mySize = myData.DataList.size();
 		fillIntersec();
 	}
