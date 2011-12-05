@@ -27,7 +27,7 @@ public class Tracking {
 	public Tracking(boolean useOBD){
 		
 		// 0. 初始化資料
-		AnalyzedData = new AnalysisRawData();  //////////////////////// 需要修改是否使用 OBD
+		AnalyzedData = new AnalysisRawData(useOBD);  
 		ForwardIntersection = new ArrayList<Intersection>();
 		BackwardIntersection = new ArrayList<Intersection>();
 		
