@@ -18,7 +18,17 @@ public class RawData{
 	public int totalIntersection = 0;	// total number of intersection in this Record set.
 	public ArrayList<SenseRecord> DataList = new ArrayList<SenseRecord>();
 	
-	public RawData(){
+	public RawData(boolean useOBD){
+		
+		
+		// For debug
+		double lat1 = 24.796699;
+		double lon1 = 120.997193;
+		double lat2 = 24.809574;
+		double lon2 = 120.983557;
+		StartPoint = new GeoPoint((int)(lat1 * 1000000), (int)(lon1 * 1000000));
+		EndPoint   = new GeoPoint((int)(lat2 * 1000000), (int)(lon2 * 1000000));
+		
 		
 		// 從 SD 卡開啟檔案
 		String filename = "RawData2.txt";
@@ -41,14 +51,27 @@ public class RawData{
 					while((InputLine = bReader.readLine())!=null){
 
 						// 依空白格分割 line 成  array
-						String[] arr = InputLine.split(" ");						
+						String[] arr = InputLine.split(" ");
+						
+						//// Debug
+						//for (String e:arr){
+						//	Log.d("e",e+".");
+						//}
 						
 						// 把 array 裏的資料加到 list 裏
-							Speed = Double.parseDouble(arr[2]);
+							if (useOBD){
+								Speed = Double.parseDouble(arr[5]);
+							} else {
+								Speed = Double.parseDouble(arr[2]);
+							}
+							// Log.d("Speed",Speed+".");
 							Direction = Double.parseDouble(arr[3]);
+							// Log.d("Direction", Direction+".");
 							TimeStamp = Long.parseLong(arr[4].trim());  // 去除空白
+							// Log.d("TimeStamp", TimeStamp+".");
 							SenseRecord sRecord = new SenseRecord(TimeStamp, Speed, Direction);
 							DataList.add(sRecord);
+						
 					}
 					bReader.close();
 					iStream.close();
