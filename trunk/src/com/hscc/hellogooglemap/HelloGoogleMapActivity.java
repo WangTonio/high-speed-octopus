@@ -41,8 +41,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -99,6 +97,9 @@ public class HelloGoogleMapActivity extends MapActivity {
 	protected boolean enableTool;
 	protected String BestProvider;
 	protected LandMarkOverlay markLayer;
+	public boolean isOBDusing = false;
+	protected Tracking TrackObj;
+	private List<GeoPoint> trackingResult;
 	
 	StringBuilder debugOut, Test;
 	double dialog_user_input_lat, dialog_user_input_long;
@@ -108,14 +109,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 			
 			my_location = new GeoPoint((int)(location.getLatitude()*GEO),
 					                   (int)(location.getLongitude()*GEO));
-			/*StringBuffer msg = new StringBuffer();
-			msg.append("目前真正的位置: \n");
-			msg.append("緯度: ");
-			msg.append(Double.toString(location.getLatitude()));
-			msg.append("\n經度: ");
-			msg.append(Double.toString(location.getLongitude()));
-			Toast.makeText(HelloGoogleMapActivity.this, msg, Toast.LENGTH_LONG).show();
-			*/
+
 			if (onRecord == 1){
 				pathPoints.add(my_location);
 				List<com.google.android.maps.Overlay> ol = mapView.getOverlays();
@@ -154,7 +148,9 @@ public class HelloGoogleMapActivity extends MapActivity {
 	    mapView.setBuiltInZoomControls(true);
 	    mapController = mapView.getController();
 	    
+	    /* 以下是 debug */
 	    AnalysisRawData my = new AnalysisRawData();
+	    my.testFunction();
 	    
 	    //Setup the location service
 	    locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
@@ -166,98 +162,14 @@ public class HelloGoogleMapActivity extends MapActivity {
 	    myCriteria.setPowerRequirement(Criteria.POWER_LOW);
 	    BestProvider = locationManager.getBestProvider(myCriteria, true);  // 取得目前收訊最好的 SENSOR
 	    
-	    // setup showing strings for Buttons
-	    debugOut = new StringBuilder();
-	    debugOut.append("按一下OK以更新GPS資訊");
-	    Test = new StringBuilder();
-	    Test.append("移動到台北車站，不要請按返回鍵\n");
-	    
 	    if( mapView != null )
         {
             mapView.setBuiltInZoomControls(true);
             mapView.setTraffic(false);
             mapController.setZoom(16);
         }
+	    FirstStart();
 	    
-	    // 移到目前位置的按鈕
-	    Button b;
-        if( ( b = (Button) findViewById(R.id.button2) ) != null )
-        {
-            b.setOnClickListener(new View.OnClickListener()
-            {
-            public void onClick(View v) {	// 顯示對話框	
-            	AlertDialog alertDialog = new AlertDialog.Builder(HelloGoogleMapActivity.this).create();
-            	alertDialog.setTitle("Debug");
-            	alertDialog.setMessage(debugOut);
-            	alertDialog.setButton("好啊！", new DialogInterface.OnClickListener(){
-            		// 當對話框按"好啊!"之後, 顯示 GPS 讀到的位置
-                	public void onClick(DialogInterface dialog, int which)
-                     {
-                		locationManager.requestLocationUpdates("gps", 5000, 5, LocListener);
-                		Location location = locationManager.getLastKnownLocation("gps");
-            			if (location != null){
-            				//pop up
-            				StringBuffer msg = new StringBuffer();
-            				msg.append("Debug-Latitude: ");
-            				msg.append(Double.toString(location.getLatitude()));
-            				msg.append("\nDebug-Longitude: ");
-            				msg.append(Double.toString(location.getLongitude()));
-            				Toast.makeText(HelloGoogleMapActivity.this, msg, Toast.LENGTH_LONG).show();
-            				my_location = new GeoPoint((int)(location.getLatitude()*GEO) ,(int)(location.getLongitude()*GEO));
-            			}else{
-            				Toast.makeText(HelloGoogleMapActivity.this, "您目前收不到GPS訊號。", Toast.LENGTH_LONG).show();			
-            			}
-                     	dialog.cancel();
-                     }
-                });
-                alertDialog.show();
-             	}
-            });
-        }
-        
-        // 移動到台北車站的按鈕
-        Button c;
-        if( ( c = (Button) findViewById(R.id.button1) ) != null )
-        {
-            c.setOnClickListener(new View.OnClickListener()
-            {
-            public void onClick(View v) {	            	        	
-            	AlertDialog alertDialog = new AlertDialog.Builder(HelloGoogleMapActivity.this).create();
-            	alertDialog.setTitle(R.string.dialog_wrap);
-            	alertDialog.setMessage(Test);
-            	alertDialog.setButton("好啊！", new DialogInterface.OnClickListener(){
-                	public void onClick(DialogInterface dialog, int which)
-                    {
-                		MapView mapView = (MapView) findViewById(R.id.mapview);
-                		mapView.startLayoutAnimation();
-                		MapController mapController = mapView.getController();               		
-                		mapController.setZoom(19);
-                		mapController.animateTo(taipei_station);
-                		Toast.makeText(HelloGoogleMapActivity.this, "您已到達台北車站", Toast.LENGTH_SHORT).show();
-                		
-                     	dialog.cancel();
-                    }
-                });
-                alertDialog.show();
-             	}
-            });
-        }
-                
-	    //衛星檢視實作
-        final CheckBox checkbox = (CheckBox) findViewById(R.id.checkBox1);
-        checkbox.setOnClickListener(new CheckBox.OnClickListener() {
-            public void onClick(View v) {
-                // Perform action on clicks, depending on whether it's now checked
-            	MapView mapView = (MapView) findViewById(R.id.mapview);
-                if (((CheckBox) v).isChecked()) {
-                	mapView.setSatellite(true);
-                    Toast.makeText(HelloGoogleMapActivity.this, "衛星模式", Toast.LENGTH_SHORT).show();
-                } else {
-                	mapView.setSatellite(false);
-                    Toast.makeText(HelloGoogleMapActivity.this, "一般模式", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
 	} // End of onCreate
 	
 	//按下  Menu-> 尋找路口  所做的事
@@ -427,7 +339,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	//尋找路口
 	public void findIntersection(){
 		findIntersection = new FindIntersection();
-		my_intersection = findIntersection.findIntersec(debug_before1, debug_before2,debug_after,false); //尋找路口，不要lookback
+		my_intersection = findIntersection.findIntersec(debug_before1, debug_before2,debug_after,false,1); //尋找路口，不要lookback
 		
 		if(my_intersection != null){
 			if(my_intersection.equals(taipei_station)){
@@ -441,6 +353,59 @@ public class HelloGoogleMapActivity extends MapActivity {
 				Toast.makeText(HelloGoogleMapActivity.this, msg, Toast.LENGTH_LONG).show();
 			}
 		}
+	}
+	
+	//實作第一次打開程式會呼叫的OBD選擇介面
+	private void FirstStart()
+	{
+		// 呼叫新的 layout 讓使用者輸入經緯度
+		LayoutInflater factory = LayoutInflater.from(this);            
+				
+		// 定義 menu.xml 為將要顯示的 textEntryView
+		final View textEntryView = factory.inflate(R.layout.first, null);
+
+		AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+		alert.setTitle("歡迎使用"); // "歡迎使用"
+		alert.setMessage(R.string.OBD_dialog); // "請問您要使用感測器的資料或是OBD車上診斷系統的資料作分析？"
+	
+		alert.setView(textEntryView);
+
+		alert.setPositiveButton("使用OBD", new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int whichButton) {
+				isOBDusing = true;
+				processPathRecovery();
+			}
+		});
+
+		alert.setNegativeButton("使用感測器", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int whichButton) {
+				isOBDusing = false;
+				processPathRecovery();
+			}
+		});
+
+		alert.show();
+	}
+	
+	//處理資料
+	private void processPathRecovery(){
+		TrackObj = new Tracking(isOBDusing);
+		trackingResult = new ArrayList<GeoPoint>();
+		trackingResult = TrackObj.getResult();
+		
+        List<com.google.android.maps.Overlay> ol = mapView.getOverlays();
+        ol.clear();
+        ol.add(new MyMapOverlay());
+        mapView.invalidate();
+        
+        MapController mapController = mapView.getController();
+        if( mapController != null )
+        {
+            mapController.animateTo( trackingResult.get(0));
+            mapController.setZoom(8);
+        }
 	}
 	
 	//處理使用者要移動的定點(指定座標)
@@ -493,6 +458,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 		Toast.makeText(HelloGoogleMapActivity.this, "已完成設定目標，可以開始生成路徑", Toast.LENGTH_SHORT).show();
 		
 	}
+	
 
 /* *** 以下是 Google Path 要求 ****/
 	//The following function is made for PATH CALCULATION	
@@ -534,6 +500,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 
 	    return _points;
 	}
+	
 
 	private String ExtraLocation(GeoPoint a){
 		String location = "";
@@ -577,6 +544,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 
 	    }
 	}
+	
 	
 	public class LandMarkOverlay extends ItemizedOverlay<OverlayItem>{
 
@@ -623,7 +591,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	
 /* *** 以下是Overlay path產生 ****/
 	class MyMapOverlay extends com.google.android.maps.Overlay
-	{		
+	{	
 		// 畫路徑
 	    @Override
 	    public boolean draw(Canvas canvas, MapView mapView, boolean shadow, long when)
@@ -643,7 +611,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	            myPaint.setAlpha(70);
 	            
                 boolean turn = true;
-	            for(GeoPoint point : _points){
+	            for(GeoPoint point : trackingResult){
 	            	if(turn){
 	            		out = p.toPixels(point, out);
 	            		myPath.moveTo(out.x, out.y);
@@ -661,6 +629,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	        return true;
 	    }
 	}
+	
 	
 	class RecordPathOverlay extends com.google.android.maps.Overlay
 	{
@@ -729,9 +698,9 @@ public class HelloGoogleMapActivity extends MapActivity {
 				msg.append(Double.toString(location.getLatitude()));
 				msg.append("\n目前經度: ");
 				msg.append(Double.toString(location.getLongitude()));
-				Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+				//Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
 			}else{
-				Toast.makeText(this, "您目前收不到GPS訊號", Toast.LENGTH_LONG).show();			
+				//Toast.makeText(this, "您目前收不到GPS訊號", Toast.LENGTH_LONG).show();			
 			}
 		}else{
 			new AlertDialog.Builder(HelloGoogleMapActivity.this)
@@ -744,6 +713,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 					.show();
 		}		
 	}
+	
 	
 	@Override
 	protected void onPause(){
@@ -758,6 +728,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 		}
 		
 	}
+	
 
 	
 /* *** 以下是 處理使用者壓住地圖時的動作 ****/	
@@ -766,6 +737,7 @@ public class HelloGoogleMapActivity extends MapActivity {
         handleLongPress(event);
         return super.dispatchTouchEvent(event);
     }
+	
 	
 	private void handleLongPress(MotionEvent event) {
 		final MotionEvent ev = event;
