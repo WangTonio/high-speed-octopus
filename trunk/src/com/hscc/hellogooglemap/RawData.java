@@ -21,7 +21,7 @@ public class RawData{
 	public RawData(){
 		
 		// 從 SD 卡開啟檔案
-		String filename = "RawData3.txt";
+		String filename = "RawData2.txt";
 		try {
 			if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
 				FileInputStream DataFile = new FileInputStream(
@@ -41,7 +41,7 @@ public class RawData{
 					while((InputLine = bReader.readLine())!=null){
 
 						// 依空白格分割 line 成  array
-						String[] arr = InputLine.split("  ");						
+						String[] arr = InputLine.split(" ");						
 						
 						// 把 array 裏的資料加到 list 裏
 							Speed = Double.parseDouble(arr[2]);
