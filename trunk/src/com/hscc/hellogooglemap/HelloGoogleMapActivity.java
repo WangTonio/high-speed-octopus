@@ -148,10 +148,6 @@ public class HelloGoogleMapActivity extends MapActivity {
 	    mapView.setBuiltInZoomControls(true);
 	    mapController = mapView.getController();
 	    
-	    /* ¥H¤U¬O debug */
-	    AnalysisRawData my = new AnalysisRawData();
-	    my.testFunction();
-	    
 	    //Setup the location service
 	    locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
 	    Criteria myCriteria = new Criteria();
