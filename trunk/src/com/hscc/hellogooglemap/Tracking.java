@@ -356,39 +356,56 @@ public class Tracking {
 	
 	private void CalculatePath(boolean isSuccess){
 		FindIntersection f = new FindIntersection();
-		
+		List<GeoPoint> tempList;
 		GeoPoint prePoint;
 		
 		if (isSuccess){
 			ReturnList.add(StartPoint);
 			prePoint = StartPoint; 
 			for (Intersection intersection : ForwardIntersection){
-				//f
-				ReturnList.add(intersection.PredictLocation);
+				tempList = f.GetDirection(prePoint, intersection.PredictLocation);
+				tempList.remove(0);
+				ReturnList.addAll(tempList);
+				prePoint = intersection.PredictLocation;
 			}
 			for (Intersection intersection : BackwardIntersection){
-				ReturnList.add(intersection.PredictLocation);
+				tempList = f.GetDirection(prePoint, intersection.PredictLocation);
+				tempList.remove(0);
+				ReturnList.addAll(tempList);
+				prePoint = intersection.PredictLocation;
 			}
-			ReturnList.add(EndPoint);
+			tempList = f.GetDirection(prePoint, EndPoint);
+			tempList.remove(0);
+			ReturnList.addAll(tempList);
 			
 		} else {
 			
 			int Fsize = ForwardIntersection.size();
 			int Bsize = BackwardIntersection.size();
-			GeoPoint x;
-			GeoPoint y;
-			 
-			if (Fsize > 1) { x = ForwardIntersection.get(Fsize-1).PredictLocation;
-			} else { x = StartPoint; }
 			
-			if (Bsize > 1){ y = BackwardIntersection.get(1).PredictLocation;
-			} else { y = EndPoint; }
+			GeoPoint x, y;
 			
-			if (Fsize > 1) { ReturnList.add(StartPoint); }
-			
-			
-			
-			
+			ReturnList.add(StartPoint);
+			prePoint = StartPoint;
+			for (int i = 0; i < Fsize - 1; i++){
+				x = prePoint;
+				y = ForwardIntersection.get(i).PredictLocation;
+				tempList = f.GetDirection(x, y);
+				tempList.remove(0);
+				ReturnList.addAll(tempList);
+				prePoint = ForwardIntersection.get(i).PredictLocation;
+			}
+			for (int i = 1; i < Bsize; i++){
+				x = prePoint;
+				y = BackwardIntersection.get(i).PredictLocation;
+				tempList = f.GetDirection(x, y);
+				tempList.remove(0);
+				ReturnList.addAll(tempList);
+				prePoint = BackwardIntersection.get(i).PredictLocation;
+			}
+			tempList = f.GetDirection(prePoint, EndPoint);
+			tempList.remove(0);
+			ReturnList.addAll(tempList);
 		}
 	}
 	
