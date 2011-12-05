@@ -19,6 +19,7 @@ public class Tracking {
 	public AnalysisRawData AnalyzedData;
 	public ArrayList<Intersection> ForwardIntersection;
 	public ArrayList<Intersection> BackwardIntersection;
+	List<GeoPoint> ReturnList = new ArrayList<GeoPoint>();
 	GeoPoint StartPoint;
 	GeoPoint EndPoint;
 	public int MiddleIndex;
@@ -26,7 +27,7 @@ public class Tracking {
 	public Tracking(boolean useOBD){
 		
 		// 0. 初始化資料
-		AnalyzedData = new AnalysisRawData();
+		AnalyzedData = new AnalysisRawData();  //////////////////////// 需要修改是否使用 OBD
 		ForwardIntersection = new ArrayList<Intersection>();
 		BackwardIntersection = new ArrayList<Intersection>();
 		
@@ -39,7 +40,7 @@ public class Tracking {
 				AnalyzedData.myData.EndPoint.getLongitudeE6()
 				);
 		
-		 List<GeoPoint> ReturnList = new ArrayList<GeoPoint>();
+		 
 	
 		// 1. 從 RawData 中找出所有的 intersection
 		int numIntersection = AnalyzedData.myData.totalIntersection;
@@ -76,35 +77,14 @@ public class Tracking {
 		// 3. startTracking
 		boolean isSuccess = startTracking();
 		
-		if (isSuccess){
-			ReturnList.add(StartPoint);
-			for (Intersection intersection : ForwardIntersection){
-				ReturnList.add(intersection.PredictLocation);
-			}
-			for (Intersection intersection : BackwardIntersection){
-				ReturnList.add(intersection.PredictLocation);
-			}
-			ReturnList.add(EndPoint);
-			
-		} else {
-			int Fsize = ForwardIntersection.size();
-			int Bsize = BackwardIntersection.size();
-			GeoPoint x;
-			GeoPoint y;
-			
-			if (Fsize > 1){
-				x = ForwardIntersection.get(Fsize-1).PredictLocation;
-			} else {
-				x = StartPoint;
-			}
-			
-			if (Bsize > 1){
-				y = BackwardIntersection.get(1).PredictLocation;
-			} else {
-				y = EndPoint;
-			}
-			
-		}
+		
+		// 4. calculate path
+		CalculatePath(isSuccess);
+		
+	}
+	
+	public List<GeoPoint> getResult(){
+		return ReturnList;
 		
 	}
 	
@@ -372,6 +352,44 @@ public class Tracking {
 		}
 
 		return location;
+	}
+	
+	private void CalculatePath(boolean isSuccess){
+		FindIntersection f = new FindIntersection();
+		
+		GeoPoint prePoint;
+		
+		if (isSuccess){
+			ReturnList.add(StartPoint);
+			prePoint = StartPoint; 
+			for (Intersection intersection : ForwardIntersection){
+				//f
+				ReturnList.add(intersection.PredictLocation);
+			}
+			for (Intersection intersection : BackwardIntersection){
+				ReturnList.add(intersection.PredictLocation);
+			}
+			ReturnList.add(EndPoint);
+			
+		} else {
+			
+			int Fsize = ForwardIntersection.size();
+			int Bsize = BackwardIntersection.size();
+			GeoPoint x;
+			GeoPoint y;
+			 
+			if (Fsize > 1) { x = ForwardIntersection.get(Fsize-1).PredictLocation;
+			} else { x = StartPoint; }
+			
+			if (Bsize > 1){ y = BackwardIntersection.get(1).PredictLocation;
+			} else { y = EndPoint; }
+			
+			if (Fsize > 1) { ReturnList.add(StartPoint); }
+			
+			
+			
+			
+		}
 	}
 	
 	class Intersection {
