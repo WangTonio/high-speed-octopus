@@ -31,12 +31,13 @@ public class FindIntersection {
 	public FindIntersection(){
 	}
 	
-	public GeoPoint findIntersec (GeoPoint beforeTurn1, GeoPoint beforeTurn2, GeoPoint afterTurn, boolean lookback){
+	public GeoPoint findIntersec (GeoPoint beforeTurn1, GeoPoint beforeTurn2, GeoPoint afterTurn, 
+			                      boolean lookback, int next){
 		
 		before1 = beforeTurn1;
 		before2 = beforeTurn2;
 		after   = afterTurn;
-		
+
     	GeoPoint intersec = taipei_station;
     	GeoPoint nextDest;
     	myLine = new Line(before1 ,before2, after);
@@ -54,7 +55,13 @@ public class FindIntersection {
     		{
     			if ( !(thistime.equals(before1)) && !(thistime.equals(nextDest))){
     				intersec = thistime;
-    				keepgoing = false;
+    				if(next != 0){
+    					if(!lookback)
+    						next--;
+    					keepgoing = true;
+    				}else{
+    					keepgoing = false;
+    				}
     				Log.e("路口經度",""+intersec.getLatitudeE6() );
     				Log.e("路口緯度",""+intersec.getLongitudeE6());
     				break;
@@ -74,6 +81,12 @@ public class FindIntersection {
     			for(GeoPoint thistime : passPoint)
     			{
     				if ( !(thistime.equals(before1)) && !(thistime.equals(nextDest))){
+    					if(next != 0){
+        					next--;
+        					keepgoing = true;
+        				}else{
+        					keepgoing = false;
+        				}
     					intersec = thistime;
     					keepgoing = false;
     					break;
