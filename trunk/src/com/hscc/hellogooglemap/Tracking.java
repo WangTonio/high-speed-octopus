@@ -13,7 +13,7 @@ public class Tracking {
 	public static final double RECORD_INTERVAL = 0.2;   // SENSOR 每 0.2 秒記錄一筆資料
 	public static final double DISTANCE_RANGE = 0.1326;
 	public static final int BEFORE_TURN_PEROID = 10;
-	public static final int AFTER_TURN_PEROID = 15;
+	public static final int AFTER_TURN_PEROID = 20;
 	
 	
 	public AnalysisRawData AnalyzedData;
@@ -51,6 +51,9 @@ public class Tracking {
 		int count = 0;
 		int size = AnalyzedData.myData.DataList.size();
 		
+		// Debug
+		Log.d("DataList size", ""+size);
+		
 		for (int i = 0; i < size; i++){
 			if (AnalyzedData.myData.DataList.get(i).Intersection == true){
 				if (count < (int)(numIntersection/2)){
@@ -67,7 +70,12 @@ public class Tracking {
 		// 2. 找出中間點
 		int a, b;
 		int fi = ForwardIntersection.size() - 1;
+		// Debug
+		Log.d("Middle index", "fi: "+fi);
 		a = ForwardIntersection.get(fi).Index;
+		
+		
+		
 		b = BackwardIntersection.get(0).Index;
 		MiddleIndex = (a + b) / 2;
 		
@@ -189,7 +197,7 @@ public class Tracking {
 						// Debug
 						Log.d("beforTurn1", "Index: "+(i- BEFORE_TURN_PEROID )+", lat: "+beforeTurn1.getLatitudeE6()+", lon: "+beforeTurn1.getLongitudeE6());
 						Log.d("beforTurn2", "Index: "+(i- BEFORE_TURN_PEROID -1 )+", lat: "+beforeTurn2.getLatitudeE6()+", lon: "+beforeTurn2.getLongitudeE6());
-						Log.d("afterTurn", "lat: "+beforeTurn2.getLatitudeE6()+", lon: "+beforeTurn2.getLongitudeE6());
+						Log.d("afterTurn", "lat: "+afterTurn.getLatitudeE6()+", lon: "+afterTurn.getLongitudeE6());
 						
 						
 						
@@ -316,6 +324,8 @@ public class Tracking {
 		return AnalyzedData.myData.DataList.get(StopIndex).Location;
 	}
 	
+	
+	/* 計算 AfterTurn */
 	public GeoPoint calAfterTurn(GeoPoint start, int index, boolean isForward){
 		SenseRecord record;
 		double direction;
@@ -354,9 +364,13 @@ public class Tracking {
 		return location;
 	}
 	
+	/* 把 intersection 串連起來產生真正的路徑 */
 	private void CalculatePath(boolean isSuccess){
 		FindIntersection f = new FindIntersection();
 		List<GeoPoint> tempList;
+		List<GeoPoint> inverseTempList;
+		int TLsize, ITLsize;
+		
 		GeoPoint prePoint;
 		
 		if (isSuccess){
@@ -364,19 +378,43 @@ public class Tracking {
 			prePoint = StartPoint; 
 			for (Intersection intersection : ForwardIntersection){
 				tempList = f.GetDirection(prePoint, intersection.PredictLocation);
-				tempList.remove(0);
-				ReturnList.addAll(tempList);
+				inverseTempList = f.GetDirection(intersection.PredictLocation, prePoint);
+				TLsize = tempList.size();
+				ITLsize = inverseTempList.size();
+				Log.d("TLsize", ""+TLsize);
+				Log.d("ITLsize", ""+ITLsize);
+				if (TLsize <= ITLsize){
+					tempList.remove(0);
+					ReturnList.addAll(tempList);
+				} else {
+					for (int j = ITLsize - 2; j>0; j++){
+						ReturnList.add(inverseTempList.get(j));
+					}
+				}
 				prePoint = intersection.PredictLocation;
 			}
+			
 			for (Intersection intersection : BackwardIntersection){
 				tempList = f.GetDirection(prePoint, intersection.PredictLocation);
-				tempList.remove(0);
-				ReturnList.addAll(tempList);
+				inverseTempList = f.GetDirection(intersection.PredictLocation, prePoint);
+				TLsize = tempList.size();
+				ITLsize = inverseTempList.size();
+				if (TLsize <= ITLsize){
+					tempList.remove(0);
+					ReturnList.addAll(tempList);					
+				} else {
+					for (int j = ITLsize - 2; j>0; j++){
+						ReturnList.add(inverseTempList.get(j));
+					}
+				}
 				prePoint = intersection.PredictLocation;
+				break;
 			}
+			/*
 			tempList = f.GetDirection(prePoint, EndPoint);
 			tempList.remove(0);
 			ReturnList.addAll(tempList);
+			*/
 			
 		} else {
 			
