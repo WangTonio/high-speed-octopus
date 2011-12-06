@@ -1,5 +1,6 @@
 package com.hscc.hellogooglemap;
 
+import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,9 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -54,7 +57,7 @@ import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.OverlayItem;
 import com.google.android.maps.Projection;
 
-public class HelloGoogleMapActivity extends MapActivity {
+public class HelloGoogleMapActivity extends MapActivity implements Runnable {
     /** Called when the activity is first created. */	
 	protected static final int MENU_QUICK1 = Menu.FIRST;
 	protected static final int MENU_QUICK2 = Menu.FIRST+1;
@@ -79,8 +82,6 @@ public class HelloGoogleMapActivity extends MapActivity {
 	GeoPoint my_location      = new GeoPoint( (int)(24.136895*GEO),(int)(120.684975*GEO)); 
 	GeoPoint my_destination   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
 	GeoPoint my_intersection  = null;
-	// 記錄使用者長按地圖所取得的位置
-	private boolean isPotentialLongPress; //記錄使用者按下了沒
 	GeoPoint my_pointTo		  = new GeoPoint( (int)(25.041111*GEO),(int)(121.516111*GEO));
 	private List<GeoPoint> _points = new ArrayList<GeoPoint>(); //hold the path signature
 	//private List<OverlayItem> items = new ArrayList<OverlayItem>();
@@ -88,6 +89,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	private List<GeoPoint> pathPoints = new ArrayList<GeoPoint>();
 	//private GeoPoint oldLocation = new GeoPoint(0, 0);
 	//private GeoPoint newLocation = new GeoPoint(0, 0);
+	private ProgressDialog pd; //轉圈圈
 	public int progressMax = 50;
 	public int progressNow = 0;
 	protected LocationManager locationManager;
@@ -100,6 +102,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 	public boolean isOBDusing = false;
 	protected Tracking TrackObj;
 	private List<GeoPoint> trackingResult;
+	List<com.google.android.maps.Overlay> ol;
 	
 	StringBuilder debugOut, Test;
 	double dialog_user_input_lat, dialog_user_input_long;
@@ -211,9 +214,9 @@ public class HelloGoogleMapActivity extends MapActivity {
 			.setIcon(R.drawable.ic_menu_location);
 		menu.add(0, MENU_QUICK2, 1, "選擇座標")
 			.setIcon(R.drawable.ic_menu_to);
-		menu.add(0, MENU_QUICK3, 2, "記錄路徑")
+		menu.add(0, MENU_QUICK3, 2, "[debug]除線")
 			.setIcon(R.drawable.ic_menu_star);
-		menu.add(0, MENU_QUICK4, 3, "建立路徑")
+		menu.add(0, MENU_QUICK4, 3, "[debug]呼叫")
 			.setIcon(R.drawable.ic_menu_pin);
 		menu.add(0, MENU_ABOUT , 4, "尋找路口")
 			.setIcon(R.drawable.ic_menu_info);
@@ -224,9 +227,9 @@ public class HelloGoogleMapActivity extends MapActivity {
 			.setIcon(R.drawable.ic_menu_location);
 		menu.add(1, MENU_QUICK2, 1, "選擇座標")
 			.setIcon(R.drawable.ic_menu_to);
-		menu.add(1, MENU_STOP  , 3, "紀錄結束")
+		menu.add(1, MENU_STOP  , 3, "[debug]除線")
 			.setIcon(R.drawable.ic_menu_garbage);
-		menu.add(1, MENU_QUICK4, 4, "建立路徑")
+		menu.add(1, MENU_QUICK4, 4, "[debug]呼叫")
 			.setIcon(R.drawable.ic_menu_pin);
 		menu.add(1, MENU_ABOUT , 5, "尋找路口")
 			.setIcon(R.drawable.ic_menu_info);
@@ -258,8 +261,6 @@ public class HelloGoogleMapActivity extends MapActivity {
 		menu.setGroupVisible(0, true);
 		return false;
 	  }
-	  
-	  
 	}
 	
 	//實作 Menu 的 code
@@ -288,21 +289,10 @@ public class HelloGoogleMapActivity extends MapActivity {
 			break;
 		case MENU_QUICK3:
 		case MENU_STOP:
-			if ( onRecord == 0){
-				onRecord = 1;
-				Toast.makeText(HelloGoogleMapActivity.this, "開始記錄您的路徑...", Toast.LENGTH_SHORT).show();
-			} else {
-				onRecord = 0;
-				pathPoints.clear();
-				Toast.makeText(HelloGoogleMapActivity.this, "已停止記錄您的路徑。", Toast.LENGTH_SHORT).show();
-			}
-			
+			ol.clear();	
 			break;
 		case MENU_QUICK4:
-			GetDirection(my_destination);
-			formMyPath();
-			UpdateMyPath();
-			Toast.makeText(HelloGoogleMapActivity.this, "您的路線已經建立！", Toast.LENGTH_LONG).show();
+			FirstStart();
 			break;
 		case MENU_ABOUT:
 			openOptionsDialog();
@@ -314,14 +304,6 @@ public class HelloGoogleMapActivity extends MapActivity {
 		return super.onOptionsItemSelected(item);
 	}
 	
-
-	private void UpdateMyPath() {
-		List<com.google.android.maps.Overlay> ol = mapView.getOverlays();
-        //ol.clear();
-        ol.add(new MyMapOverlay());
-        mapView.invalidate();
-	}
-
 	//移動 mapView 到使用者現在的位置
 	private void toMyLocation() {
 		mapController.animateTo(my_location);		
@@ -371,6 +353,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 		{
 			public void onClick(DialogInterface dialog, int whichButton) {
 				isOBDusing = true;
+				Toast.makeText(HelloGoogleMapActivity.this, "請您稍後，等待路徑重建完成", Toast.LENGTH_LONG).show();
 				processPathRecovery();
 			}
 		});
@@ -378,20 +361,17 @@ public class HelloGoogleMapActivity extends MapActivity {
 		alert.setNegativeButton("使用感測器", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
 				isOBDusing = false;
+				Toast.makeText(HelloGoogleMapActivity.this, "請您稍後，等待路徑重建完成", Toast.LENGTH_LONG).show();
 				processPathRecovery();
 			}
 		});
-
+		alert.setIcon(R.drawable.ic_menu_info);
 		alert.show();
+		
 	}
 	
-	//處理資料
-	private void processPathRecovery(){
-		TrackObj = new Tracking(isOBDusing);
-		trackingResult = new ArrayList<GeoPoint>();
-		trackingResult = TrackObj.getResult();
-		
-        List<com.google.android.maps.Overlay> ol = mapView.getOverlays();
+	public void setview(){
+		ol = mapView.getOverlays();
         ol.clear();
         ol.add(new MyMapOverlay());
         mapView.invalidate();
@@ -400,8 +380,36 @@ public class HelloGoogleMapActivity extends MapActivity {
         if( mapController != null )
         {
             mapController.animateTo( trackingResult.get(0));
-            mapController.setZoom(8);
+            mapController.setZoom(16);
         }
+	}
+	
+	//建立一個新的執行緒，用來一邊跑進度圈圈一邊跑重建路徑，但受限於android API，MapView必須在handler那邊執行
+	public void run() {
+		TrackObj = new Tracking(isOBDusing);
+		trackingResult = new ArrayList<GeoPoint>();
+		trackingResult = TrackObj.getResult();
+		handler.sendEmptyMessage(0);
+	}
+
+	//蛋疼的 android....
+	private Handler handler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			setview();
+			pd.dismiss();
+		}
+	};
+	
+	//處理使用者資料，在按下選擇資料來源之後
+	private void processPathRecovery(){
+		
+		pd = ProgressDialog.show(this, "請稍後", "重建路徑中", true,
+				false);
+
+		Thread thread = new Thread(this);
+		thread.start();
+		
 	}
 	
 	//處理使用者要移動的定點(指定座標)
@@ -497,7 +505,6 @@ public class HelloGoogleMapActivity extends MapActivity {
 	    return _points;
 	}
 	
-
 	private String ExtraLocation(GeoPoint a){
 		String location = "";
 		location = "" + Double.toString(((double)a.getLatitudeE6())/GEO) + "," + Double.toString(((double)a.getLongitudeE6())/GEO);
@@ -541,7 +548,6 @@ public class HelloGoogleMapActivity extends MapActivity {
 	    }
 	}
 	
-	
 	public class LandMarkOverlay extends ItemizedOverlay<OverlayItem>{
 
 		private List<OverlayItem> items = new ArrayList<OverlayItem>();
@@ -574,16 +580,6 @@ public class HelloGoogleMapActivity extends MapActivity {
 		}
 		
 	}
-
-	private void formMyPath() {
-		
-		Drawable pin = getResources().getDrawable(R.drawable.cluster);
-		pin.setBounds(0,0,pin.getMinimumWidth(),pin.getMinimumHeight());
-		
-		markLayer = new LandMarkOverlay(pin);
-		mapView.getOverlays().add(markLayer);
-	}
-	
 	
 /* *** 以下是Overlay path產生 ****/
 	class MyMapOverlay extends com.google.android.maps.Overlay
@@ -619,14 +615,12 @@ public class HelloGoogleMapActivity extends MapActivity {
 	                	myPath.moveTo(out.x, out.y);
 	                	
 	            	}
-				}
-	            
+				}  
 	        }
 	        return true;
 	    }
 	}
-	
-	
+		
 	class RecordPathOverlay extends com.google.android.maps.Overlay
 	{
 		@Override
@@ -654,24 +648,9 @@ public class HelloGoogleMapActivity extends MapActivity {
             		out = p.toPixels(point, out);
                     myPath.lineTo(out.x, out.y);
                 	canvas.drawPath(myPath, myPaint);
-                	myPath.moveTo(out.x, out.y);
-                	
+                	myPath.moveTo(out.x, out.y);     	
             	}
 			}
-	    	/*
-			nextPaint.setColor(Color.GREEN);
-			nextPaint.setStyle(Paint.Style.STROKE);
-			nextPaint.setStrokeWidth(10);
-			nextPaint.setAlpha(50);
-			
-			pastPoint = a.toPixels(oldLocation, pastPoint);
-			nextPath.moveTo(pastPoint.x, pastPoint.y);
-			
-			nextPoint = a.toPixels(newLocation, nextPoint);
-			nextPath.lineTo(nextPoint.x, nextPoint.y);
-			
-			canvas.drawPath(nextPath, nextPaint);
-			*/
 	        return true;
 	    }
 	}
@@ -709,8 +688,7 @@ public class HelloGoogleMapActivity extends MapActivity {
 					.show();
 		}		
 	}
-	
-	
+		
 	@Override
 	protected void onPause(){
 		super.onPause();
@@ -724,75 +702,5 @@ public class HelloGoogleMapActivity extends MapActivity {
 		}
 		
 	}
-	
-
-	
-/* *** 以下是 處理使用者壓住地圖時的動作 ****/	
-	@Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
-        handleLongPress(event);
-        return super.dispatchTouchEvent(event);
-    }
-	
-	
-	private void handleLongPress(MotionEvent event) {
-		final MotionEvent ev = event;
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            // A new touch has been detected
- 
-            new Thread(new Runnable() {
-                public void run() {
-                    Looper.prepare();
-                    if (isLongPressDetected()) {
-                        // 偵測的長壓，在這裡處理事件
-                    	Projection p = mapView.getProjection();
-                        my_pointTo = p.fromPixels((int) ev.getX(), (int) ev.getY());
-                        Toast.makeText(HelloGoogleMapActivity.this, "已儲存您的標記1", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }).start();
-        } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-        	if (event.getHistorySize() < 1)                
-        		return; // First call, no history             
-        	// Get difference in position since previous move event
-        	float diffX = event.getX()                    
-        			- event.getHistoricalX(event.getHistorySize() - 1);            
-        	float diffY = event.getY()                    
-        			- event.getHistoricalY(event.getHistorySize() - 1);             
-        	/* If position has moved substantially, this is not a long press but               
-        	 * probably a drag action */            
-        	if (Math.abs(diffX) > 1.00015f || Math.abs(diffY) > 1.000121f) {  
-        		isPotentialLongPress = false;
-        	}else{
-        		Projection p = mapView.getProjection();
-                my_pointTo = p.fromPixels((int) ev.getX(), (int) ev.getY());
-                Toast.makeText(HelloGoogleMapActivity.this, "已儲存您的標記3", Toast.LENGTH_SHORT).show();
-                isPotentialLongPress = true;
-        	}
-        } else {
-            // This motion is something else, and thus not part of a longpress
-        	Projection p = mapView.getProjection();
-            my_pointTo = p.fromPixels((int) ev.getX(), (int) ev.getY());
-            //Toast.makeText(HelloGoogleMapActivity.this, "已儲存您的標記2", Toast.LENGTH_SHORT).show();
-            isPotentialLongPress = false;
-        }
-    }
- 
-    public boolean isLongPressDetected() {
-        isPotentialLongPress = true;
-        try {
-            for (int i = 0; i < (50); i++) {
-                Thread.sleep(10);
-                if (!isPotentialLongPress) {
-                    return false;
-                }
-            }
-            return true;
-        } catch (InterruptedException e) {
-            return false;
-        } finally {
-            isPotentialLongPress = false;
-        }
-    }
  
 }

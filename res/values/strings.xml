@@ -2,7 +2,7 @@
 <resources>
 
     <string name="hello">地圖顯示範例應用  |  </string>
-    <string name="app_name">嗨！地圖</string>
+    <string name="app_name">高速章魚王</string>
     <string name="display_taiwan">哈囉，台灣</string>
     <string name="buttom_satelize">偵錯移動</string>
     <string name="check_satellize">衛星檢視</string>
@@ -17,6 +17,6 @@
     <string name="dialog_long_title">請輸入經度</string>
     <string name="dialog_wrap">位移開始</string>
     <string name="pleasewait">請稍等..這個動作可能會消耗數十秒</string>
-    <string name="OBD_dialog">請問您要使用感測器的資料或是OBD車上診斷系統的資料作分析？</string>
+    <string name="OBD_dialog">請選擇您要使用感測器\n或是OBD車上診斷系統\n的資料作為分析來源</string>
 
 </resources>
