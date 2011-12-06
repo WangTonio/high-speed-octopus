@@ -1,6 +1,5 @@
 package com.hscc.hellogooglemap;
 
-import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,14 +34,12 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -90,6 +87,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	//private GeoPoint oldLocation = new GeoPoint(0, 0);
 	//private GeoPoint newLocation = new GeoPoint(0, 0);
 	private ProgressDialog pd; //轉圈圈
+	private int turnCir = 0;
 	public int progressMax = 50;
 	public int progressNow = 0;
 	protected LocationManager locationManager;
@@ -376,6 +374,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
         ol.add(new MyMapOverlay());
         mapView.invalidate();
         
+        
         MapController mapController = mapView.getController();
         if( mapController != null )
         {
@@ -590,6 +589,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	    {
 	        super.draw(canvas, mapView, shadow);
 	        
+	        //turnCir++;
 	        if( true )
 	        {
 	            Projection p = mapView.getProjection();
@@ -603,6 +603,8 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	            myPaint.setAlpha(70);
 	            
                 boolean turn = true;
+                
+                Log.d("畫線","資料量: " + trackingResult.size());
 	            for(GeoPoint point : trackingResult){
 	            	if(turn){
 	            		out = p.toPixels(point, out);
@@ -612,10 +614,10 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	            		out = p.toPixels(point, out);
 	                    myPath.lineTo(out.x, out.y);
 	                	canvas.drawPath(myPath, myPaint);
-	                	myPath.moveTo(out.x, out.y);
-	                	
+	                	myPath.moveTo(out.x, out.y);	
 	            	}
 				}  
+	            mapView.invalidate();
 	        }
 	        return true;
 	    }
