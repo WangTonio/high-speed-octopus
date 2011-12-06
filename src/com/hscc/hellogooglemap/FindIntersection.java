@@ -37,36 +37,33 @@ public class FindIntersection {
 		before1 = beforeTurn1;
 		before2 = beforeTurn2;
 		after   = afterTurn;
-
+		double minDist = 1000000;
     	GeoPoint intersec = taipei_station;
     	GeoPoint nextDest;
     	myLine = new Line(before1 ,before2, after);
     	boolean keepgoing = true;
+    	double temp;
     	for(double i = 0; (i < progressMax) & keepgoing; i = i + 1.0)
     	{
     		nextDest = myLine.Function(i);
+    		
     		GetDirection(before1, nextDest);
-    		try {
-				Thread.sleep(250);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+    		try {Thread.sleep(250);} catch (InterruptedException e) {e.printStackTrace();}
+    		
     		for(GeoPoint thistime : passPoint)
     		{
     			if ( !(thistime.equals(before1)) && !(thistime.equals(nextDest))){
-    				intersec = thistime;
-    				if(next != 0){
-    					if(!lookback)
-    						next--;
-    					keepgoing = true;
-    				}else{
-    					keepgoing = false;
-    				}
-    				Log.e("路口經度",""+intersec.getLatitudeE6() );
-    				Log.e("路口緯度",""+intersec.getLongitudeE6());
-    				break;
+    				temp = weight(before1,thistime,after);
+    				if(temp < minDist){
+    					Log.w("最近","距離: "+ temp + "  緯度: " + thistime.getLatitudeE6() + "  經度: " + thistime.getLongitudeE6());
+    					minDist = temp;
+    					intersec = thistime;
+    				}		
     			}
     		}
+    		
+    		Log.e("路口經度 ", ""+intersec.getLatitudeE6() + "路口緯度 "+intersec.getLongitudeE6());
+
     		
     		passPoint.clear();
     		
@@ -81,16 +78,12 @@ public class FindIntersection {
     			for(GeoPoint thistime : passPoint)
     			{
     				if ( !(thistime.equals(before1)) && !(thistime.equals(nextDest))){
-    					if(next != 0){
-        					next--;
-        					keepgoing = true;
-        				}else{
-        					keepgoing = false;
-        				}
-    					intersec = thistime;
-    					keepgoing = false;
-    					break;
-    				}
+        				temp = weight(before1,thistime,after);
+        				if(temp < minDist){
+        					minDist = temp;
+        					intersec = thistime;
+        				}		
+        			}
     			}
     			passPoint.clear();
     		}
@@ -185,5 +178,34 @@ public class FindIntersection {
 	        passPoint.add(p);
 
 	    }
+	}
+	
+	//計算兩個 GeoPoint 間的距離
+	public double distance(GeoPoint start, GeoPoint dest){
+		double lat1 = toRad((double)start.getLatitudeE6()/GEO);
+		double lat2 = toRad((double)dest.getLatitudeE6() /GEO);
+		double lon1 = toRad((double)start.getLongitudeE6()/GEO);
+		double lon2 = toRad((double)dest.getLongitudeE6() /GEO);
+
+		double dLat = (lat2-lat1);
+		double dLon = (lon2-lon1);
+
+		double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+		           Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+		double d = 6371 * c;
+		return d;
+	}
+		
+	public double toRad(double number){
+		return number*Math.PI/180.0;
+	}
+
+	public double weight(GeoPoint before1, GeoPoint inter, GeoPoint after){
+		double a, b;
+		a = distance(before1,inter);
+		b = distance(after,inter);
+		return (a*a + b*b);
 	}
 }

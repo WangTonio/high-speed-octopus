@@ -53,6 +53,7 @@ import com.google.android.maps.MyLocationOverlay;
 //import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 import com.google.android.maps.Projection;
+import com.hscc.hellogooglemap.Tracking.Intersection;
 
 public class HelloGoogleMapActivity extends MapActivity implements Runnable {
     /** Called when the activity is first created. */	
@@ -387,7 +388,15 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	public void run() {
 		TrackObj = new Tracking(isOBDusing);
 		trackingResult = new ArrayList<GeoPoint>();
-		trackingResult = TrackObj.getResult();
+		trackingResult.add(TrackObj.StartPoint);
+		for(Intersection a : TrackObj.ForwardIntersection){
+			trackingResult.add(a.PredictLocation);
+		}
+		for(Intersection b : TrackObj.BackwardIntersection){
+			trackingResult.add(b.PredictLocation);
+		}
+		trackingResult.add(TrackObj.EndPoint);
+		//trackingResult = TrackObj.getResult();
 		handler.sendEmptyMessage(0);
 	}
 
@@ -604,7 +613,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	            
                 boolean turn = true;
                 
-                Log.d("畫線","資料量: " + trackingResult.size());
+                //Log.d("畫線","資料量: " + trackingResult.size());
 	            for(GeoPoint point : trackingResult){
 	            	if(turn){
 	            		out = p.toPixels(point, out);
