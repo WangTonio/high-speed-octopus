@@ -31,7 +31,7 @@ public class RawData{
 		
 		
 		// 從 SD 卡開啟檔案
-		String filename = "RawData2.txt";
+		String filename = "RawData.txt";
 		try {
 			if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
 				FileInputStream DataFile = new FileInputStream(
@@ -54,29 +54,48 @@ public class RawData{
 						String[] arr = InputLine.split(" ");
 						
 						//// Debug
-						//for (String e:arr){
-						//	Log.d("e",e+".");
-						//}
+						for (String e:arr){
+							Log.d("e",e+".");
+						}
 						
 						// 把 array 裏的資料加到 list 裏
+						if ( arr[0].equals("START") ){
+							
+							StartPoint = new GeoPoint(
+									(int)(Double.parseDouble(arr[1].trim())*1000000), 
+									(int)(Double.parseDouble(arr[2].trim())*1000000));
+							
+						} else if( arr[0].equals("END") ){
+							
+							EndPoint = new GeoPoint(
+									(int)(Double.parseDouble(arr[1].trim())*1000000),
+									(int)(Double.parseDouble(arr[2].trim())*1000000));
+							
+						} else {
+							
 							if (useOBD){
-								Speed = Double.parseDouble(arr[5]);
+								Speed = Double.parseDouble(arr[4].trim());
 							} else {
-								Speed = Double.parseDouble(arr[2]);
+								Speed = Double.parseDouble(arr[1].trim());
 							}
 							// Log.d("Speed",Speed+".");
-							Direction = Double.parseDouble(arr[3]);
+							Direction = Double.parseDouble(arr[2].trim());
 							// Log.d("Direction", Direction+".");
-							TimeStamp = Long.parseLong(arr[4].trim());  // 去除空白
+							TimeStamp = Long.parseLong(arr[3].trim());  // 去除空白
 							// Log.d("TimeStamp", TimeStamp+".");
 							SenseRecord sRecord = new SenseRecord(TimeStamp, Speed, Direction);
 							DataList.add(sRecord);
-						
+						}
 					}
 					bReader.close();
 					iStream.close();
 					DataFile.close();
-					
+					if (StartPoint.equals(null)){
+						Log.e("Wrong data format", "No Start Point!");
+					}
+					if (StartPoint.equals(null)){
+						Log.e("Wrong data format", "No End Point!");
+					}
 				}
 			}
 		} catch (IOException e){
