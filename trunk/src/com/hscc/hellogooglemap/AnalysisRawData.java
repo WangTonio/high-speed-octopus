@@ -178,7 +178,7 @@ public class AnalysisRawData {
 		public int NoTurn    = 3;
 		public int myTurn;
 		
-		public double turnThreshold = 35;
+		public double turnThreshold = 40;
 		public double TurnLeftDeg   = 270;
 		public double TurnRightDeg  = 90;
 		public double UTurnDeg      = 180;
