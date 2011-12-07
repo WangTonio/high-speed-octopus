@@ -31,7 +31,6 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -41,7 +40,9 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
+import android.view.ViewGroup;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
@@ -82,13 +83,9 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	GeoPoint my_intersection  = null;
 	GeoPoint my_pointTo		  = new GeoPoint( (int)(25.041111*GEO),(int)(121.516111*GEO));
 	private List<GeoPoint> _points = new ArrayList<GeoPoint>(); //hold the path signature
-	//private List<OverlayItem> items = new ArrayList<OverlayItem>();
-	private ProgressDialog m_pDialog; //進度條實作
 	private List<GeoPoint> pathPoints = new ArrayList<GeoPoint>();
-	//private GeoPoint oldLocation = new GeoPoint(0, 0);
-	//private GeoPoint newLocation = new GeoPoint(0, 0);
 	private ProgressDialog pd; //轉圈圈
-	private int turnCir = 0;
+
 	public int progressMax = 50;
 	public int progressNow = 0;
 	protected LocationManager locationManager;
@@ -106,6 +103,9 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	StringBuilder debugOut, Test;
 	double dialog_user_input_lat, dialog_user_input_long;
 	
+    int timeStart = 0;
+    int timeEnd   = 100;
+    
 	protected final LocationListener LocListener = new LocationListener(){
 		public void onLocationChanged(Location location) {
 			
@@ -170,40 +170,12 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	    
 	} // End of onCreate
 	
-	//按下  Menu-> 尋找路口  所做的事
-	private void openOptionsDialog(){		
-		new AlertDialog.Builder(this)
-		.setTitle(R.string.buttom_debug)
-		.setMessage("找路口測試實作與此\n按下OK來測試")
-		.setPositiveButton("OK", 
-				new DialogInterface.OnClickListener(){
-					public void onClick(DialogInterface dialog, int which) {		
-						m_pDialog = new ProgressDialog(HelloGoogleMapActivity.this);
-						m_pDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-						m_pDialog.setTitle("Confirm Request");
-						m_pDialog.setMessage("按下開始後，可能需要一點時間\n按下後，請您耐心等他跑完");
-						m_pDialog.setProgress(100);
-						m_pDialog.setIndeterminate(false);
-						m_pDialog.setCancelable(true);
-						m_pDialog.setButton("開始", new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int i){
-								findIntersection();
-								dialog.cancel();
-							}});
-						m_pDialog.show();	
-						}	
-					})
-		.setNegativeButton("Help", 
-				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
-						Uri uri = Uri.parse("http://140.114.71.246");
-						Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-						startActivity(intent);
-			}
-		})
-		.show();
+	//第一次執行顯示的說明
+	private void FirstStart() {
+		
+		
 	}
-	
+
 	//Menu 的顯示
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
@@ -211,35 +183,35 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		
 		menu.add(0, MENU_QUICK1, 0, "現在位置")
 			.setIcon(R.drawable.ic_menu_location);
-		menu.add(0, MENU_QUICK2, 1, "選擇座標")
+		menu.add(0, MENU_QUICK2, 1, "路徑重建")
 			.setIcon(R.drawable.ic_menu_to);
-		menu.add(0, MENU_QUICK3, 2, "[debug]除線")
-			.setIcon(R.drawable.ic_menu_star);
-		menu.add(0, MENU_QUICK4, 3, "[debug]呼叫")
+		menu.add(0, MENU_QUICK3, 2, "清除路徑")
+			.setIcon(R.drawable.ic_menu_garbage);
+		menu.add(0, MENU_QUICK4, 3, "選擇資料")
+			.setIcon(R.drawable.ic_menu_loopbin);
+		menu.add(0, MENU_ABOUT , 4, "設定GPS區間")
 			.setIcon(R.drawable.ic_menu_pin);
-		menu.add(0, MENU_ABOUT , 4, "尋找路口")
-			.setIcon(R.drawable.ic_menu_info);
 		menu.add(0, MENU_QUIT  , 5, "結束")
 			.setIcon(R.drawable.ic_menu_icon1);
 		
 		menu.add(1, MENU_QUICK1, 0, "現在位置")
 			.setIcon(R.drawable.ic_menu_location);
-		menu.add(1, MENU_QUICK2, 1, "選擇座標")
+		menu.add(1, MENU_QUICK2, 1, "路徑重建")
 			.setIcon(R.drawable.ic_menu_to);
-		menu.add(1, MENU_STOP  , 3, "[debug]除線")
+		menu.add(1, MENU_QUICK3, 2, "清除路徑")
 			.setIcon(R.drawable.ic_menu_garbage);
-		menu.add(1, MENU_QUICK4, 4, "[debug]呼叫")
+		menu.add(1, MENU_QUICK4, 3, "選擇資料")
+			.setIcon(R.drawable.ic_menu_loopbin);
+		menu.add(1, MENU_ABOUT , 4, "設定GPS區間")
 			.setIcon(R.drawable.ic_menu_pin);
-		menu.add(1, MENU_ABOUT , 5, "尋找路口")
-			.setIcon(R.drawable.ic_menu_info);
-		menu.add(1, MENU_QUIT  , 6, "結束")
+		menu.add(1, MENU_QUIT  , 5, "結束")
 			.setIcon(R.drawable.ic_menu_icon1);
 		
 		menu.setGroupVisible(0, false);
 		return true;
 	}
 	
-	//準備Menu
+	//準備 Menu
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu)
 	{
@@ -271,7 +243,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		
 		switch(item.getItemId()){
 		
-		case MENU_QUICK1:
+		case MENU_QUICK1: //現在位置
 			if(my_location.equals(taichung_station)){
 				toMyLocation();
 				mapController.setZoom(18);
@@ -282,19 +254,19 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 				Toast.makeText(HelloGoogleMapActivity.this, "已到達您現在的位置", Toast.LENGTH_SHORT).show();
 			}    		
     		break;
-		case MENU_QUICK2:
-			InputLocationDialog();
-			Toast.makeText(HelloGoogleMapActivity.this, "按下建立路徑便可開始移動", Toast.LENGTH_SHORT).show();
+		case MENU_QUICK2: //路徑重建
+			Toast.makeText(HelloGoogleMapActivity.this, "請您稍後，等待路徑重建完成", Toast.LENGTH_LONG).show();
+			processPathRecovery();
 			break;
-		case MENU_QUICK3:
+		case MENU_QUICK3: //清除路徑
 		case MENU_STOP:
 			ol.clear();	
 			break;
-		case MENU_QUICK4:
-			FirstStart();
+		case MENU_QUICK4: //選擇資料
+			SelectData();
 			break;
-		case MENU_ABOUT:
-			openOptionsDialog();
+		case MENU_ABOUT:  //設定GPS區間
+			SettingGPSinterval();
 			break;
 		case MENU_QUIT:
 			finish();
@@ -303,6 +275,107 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		return super.onOptionsItemSelected(item);
 	}
 	
+	private void SettingGPSinterval() {
+		
+		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		View layout = inflater.inflate(R.layout.menu, (ViewGroup) findViewById(R.layout.menu));
+		AlertDialog.Builder builder = new AlertDialog.Builder(this)
+		.setView(layout);
+		AlertDialog alertDialog = builder.create();
+		alertDialog.show();
+		
+		SeekBar seekBarStart = (SeekBar)layout.findViewById(R.id.seekBar1);
+	    final TextView seekBarValueStart = (TextView)findViewById(R.id.seekValueStart);  
+	    SeekBar seekBarEnd = (SeekBar)findViewById(R.id.seekBar2);  
+	    final TextView seekBarValueEnd = (TextView)findViewById(R.id.seekValueEnd);
+	    
+	    seekBarStart.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+		public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
+			seekBarValueStart.setText(String.valueOf(progress));
+        	timeStart = progress;
+		        }
+
+		public void onStartTrackingTouch(SeekBar seekBar) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void onStopTrackingTouch(SeekBar seekBar) {
+			// TODO Auto-generated method stub
+			
+		}
+		    });
+
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		/*
+		LayoutInflater factory = LayoutInflater.from(this);            
+				
+		// 定義 menu.xml 為將要顯示的 textEntryView
+		final View textEntryView = factory.inflate(R.layout.menu, null);
+
+		AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+		alert.setTitle(R.string.dialog_select_position); // "選擇座標"
+		alert.setMessage(R.string.dialog_select_inside); // "請輸入欲前往的座標"
+		
+		alert.setView(textEntryView);
+
+		alert.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() 
+		{
+			public void onClick(DialogInterface dialog, int whichButton) {
+				//dialog_user_input_lat  = Double.parseDouble(input_lat.getText().toString());
+				//dialog_user_input_long = Double.parseDouble(input_long.getText().toString());
+				process_dialog_input(dialog_user_input_lat, dialog_user_input_long);
+			}
+		});
+
+		alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int whichButton) {
+				 // Canceled.
+			}
+		});
+
+		alert.show();
+		
+		SeekBar seekBarStart = (SeekBar)findViewById(R.id.seekBar1);  
+	    final TextView seekBarValueStart = (TextView)findViewById(R.id.seekValueStart);  
+	    SeekBar seekBarEnd = (SeekBar)findViewById(R.id.seekBar2);  
+	    final TextView seekBarValueEnd = (TextView)findViewById(R.id.seekValueEnd);
+	    
+	    seekBarStart.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+	        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
+	        	seekBarValueStart.setText(String.valueOf(progress));
+	        	timeStart = progress;
+	        }
+
+			public void onStartTrackingTouch(SeekBar seekBar) {
+					
+			}
+
+			public void onStopTrackingTouch(SeekBar seekBar) {
+				
+			}
+	    });
+	    */
+	    
+	}
+
 	//移動 mapView 到使用者現在的位置
 	private void toMyLocation() {
 		mapController.animateTo(my_location);		
@@ -332,8 +405,8 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		}
 	}
 	
-	//實作第一次打開程式會呼叫的OBD選擇介面
-	private void FirstStart()
+	//實作"選擇資料"
+	private void SelectData()
 	{
 		// 呼叫新的 layout 讓使用者輸入經緯度
 		LayoutInflater factory = LayoutInflater.from(this);            
@@ -343,7 +416,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 
 		AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
-		alert.setTitle("歡迎使用"); // "歡迎使用"
+		alert.setTitle("選擇資料"); // "歡迎使用"
 		alert.setMessage(R.string.OBD_dialog); // "請問您要使用感測器的資料或是OBD車上診斷系統的資料作分析？"
 	
 		alert.setView(textEntryView);
@@ -352,16 +425,12 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		{
 			public void onClick(DialogInterface dialog, int whichButton) {
 				isOBDusing = true;
-				Toast.makeText(HelloGoogleMapActivity.this, "請您稍後，等待路徑重建完成", Toast.LENGTH_LONG).show();
-				processPathRecovery();
 			}
 		});
 
 		alert.setNegativeButton("使用感測器", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
 				isOBDusing = false;
-				Toast.makeText(HelloGoogleMapActivity.this, "請您稍後，等待路徑重建完成", Toast.LENGTH_LONG).show();
-				processPathRecovery();
 			}
 		});
 		alert.setIcon(R.drawable.ic_menu_info);
@@ -420,44 +489,6 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		
 	}
 	
-	//處理使用者要移動的定點(指定座標)
-	private void InputLocationDialog()
-	{
-		// 呼叫新的 layout 讓使用者輸入經緯度
-		LayoutInflater factory = LayoutInflater.from(this);            
-		
-		// 定義 menu.xml 為將要顯示的 textEntryView
-        final View textEntryView = factory.inflate(R.layout.menu, null);
-
-		AlertDialog.Builder alert = new AlertDialog.Builder(this);
-
-		alert.setTitle(R.string.dialog_select_position); // "選擇座標"
-		alert.setMessage(R.string.dialog_select_inside); // "請輸入欲前往的座標"
-
-		// Set an EditText view to get user input (without  textEntryView. with result in an error)
-		final EditText input_lat  = (EditText) textEntryView.findViewById(R.id.dialog_input_lat);		
-		final EditText input_long = (EditText) textEntryView.findViewById(R.id.dialog_input_long);
-		
-		alert.setView(textEntryView);
-
-		alert.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() 
-		{
-			public void onClick(DialogInterface dialog, int whichButton) {
-				dialog_user_input_lat  = Double.parseDouble(input_lat.getText().toString());
-				dialog_user_input_long = Double.parseDouble(input_long.getText().toString());
-				process_dialog_input(dialog_user_input_lat, dialog_user_input_long);
-			}
-		});
-
-		alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-		  public void onClick(DialogInterface dialog, int whichButton) {
-		    // Canceled.
-		  }
-		});
-
-		alert.show();
-	}
-
 	//處理使用者輸入的定點座標
 	protected void process_dialog_input(double _lat, double _long) {
 		MapView mapView = (MapView) findViewById(R.id.mapview);

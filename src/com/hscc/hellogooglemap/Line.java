@@ -52,8 +52,8 @@ public class Line {
 		int X,Y;
 		X = (int)(middleX + paraX * fixCoord * var);
 		Y = (int)(middleY + paraY * fixCoord * var);
-		Log.e("算出的X座標","" + X);
-		Log.e("算出的Y座標","" + Y);
+		//Log.e("算出的X座標","" + X);
+		//Log.e("算出的Y座標","" + Y);
 		myReturn = new GeoPoint(X,Y);
 		return myReturn;
 	}

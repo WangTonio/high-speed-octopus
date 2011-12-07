@@ -50,26 +50,30 @@ public class FindIntersection {
     		GetDirection(before1, nextDest);
     		try {Thread.sleep(250);} catch (InterruptedException e) {e.printStackTrace();}
     		
-    		for(GeoPoint thistime : passPoint)
-    		{
-    			if ( !(thistime.equals(before1)) && !(thistime.equals(nextDest))){
-    				temp = weight(before1,thistime,after);
-    				if(temp < minDist){
-    					Log.w("最近","距離: "+ temp + "  緯度: " + thistime.getLatitudeE6() + "  經度: " + thistime.getLongitudeE6());
-    					minDist = temp;
-    					intersec = thistime;
-    				}		
+    		if(passPoint.size() > 2){
+    			for(GeoPoint thistime : passPoint)
+    			{
+    				if ( !(thistime.equals(before1)) && !(thistime.equals(nextDest))){
+    					temp = weight(before1,thistime,after);
+    					if(temp < minDist){
+    						Log.w("最近","距離: "+ temp + "  緯度: " + thistime.getLatitudeE6() + "  經度: " + thistime.getLongitudeE6());
+    						minDist = temp;
+    						intersec = thistime;
+    					}		
+    				}
     			}
+    			Log.e("路口", "經度 "+intersec.getLatitudeE6() + "路口緯度 "+intersec.getLongitudeE6());
+    		}else{
+    			Log.e("路口", "資料裡沒有路口");
     		}
     		
-    		Log.e("路口經度 ", ""+intersec.getLatitudeE6() + "路口緯度 "+intersec.getLongitudeE6());
 
     		
     		passPoint.clear();
     		
     		if(lookback){
     			try {
-    				Thread.sleep(250);
+    				Thread.sleep(900);
     			} catch (InterruptedException e) {
     				e.printStackTrace();
     			}
