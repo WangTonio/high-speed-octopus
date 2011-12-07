@@ -46,7 +46,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="0" />
+            android:text="0%" />
 
     </LinearLayout>
 
@@ -59,13 +59,13 @@
     <SeekBar
         android:id="@+id/seekBar2"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:max="100"/>
+        android:layout_height="wrap_content" android:max="100" android:progress="100"/>
 
     <TextView
         android:id="@+id/seekValueEnd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="0" />
+        android:text="100%" />
 
     <TextView
         android:id="@+id/textView3"
@@ -73,16 +73,24 @@
         android:layout_height="wrap_content"
         android:text="    " />
 
-    <TextView
-        android:id="@+id/textView4"
+    <TableRow
+        android:id="@+id/tableRow2"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="顯示無GPS的路徑連線" />
+        android:layout_height="wrap_content" >
 
-    <ToggleButton
-        android:id="@+id/toggleButton1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="ToggleButton" />
+        <ToggleButton
+            android:id="@+id/toggleButton1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ToggleButton" android:textOff=" " android:textOn=" "/>
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="  顯示無GPS的路徑連線"/>
+
+    </TableRow>
 
 </TableLayout>

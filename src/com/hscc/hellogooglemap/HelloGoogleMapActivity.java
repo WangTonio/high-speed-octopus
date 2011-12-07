@@ -20,6 +20,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -41,9 +42,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
@@ -66,7 +69,6 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	protected static final int MENU_ABOUT  = Menu.FIRST+4;
 	protected static final int MENU_QUIT   = Menu.FIRST+5;
 	private   static final int GEO = 1000000;
-	private   FindIntersection findIntersection;
 	protected static int onRecord = 0;
 	
 	GeoPoint FirstPoint;
@@ -95,17 +97,17 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	protected boolean enableTool;
 	protected String BestProvider;
 	protected LandMarkOverlay markLayer;
+	static final int REQUEST_CODE	= 1;
+	
 	public boolean isOBDusing = false;
+	public boolean isGpsDisplay = false;
+	int timeStart = 0;
+    int timeEnd   = 100;
+    public String userSelectFileName;
 	protected Tracking TrackObj;
 	private List<GeoPoint> trackingResult;
 	List<com.google.android.maps.Overlay> ol;
 	
-	StringBuilder debugOut, Test;
-	double dialog_user_input_lat, dialog_user_input_long;
-	
-    int timeStart = 0;
-    int timeEnd   = 100;
-    
 	protected final LocationListener LocListener = new LocationListener(){
 		public void onLocationChanged(Location location) {
 			
@@ -165,15 +167,14 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
             mapView.setBuiltInZoomControls(true);
             mapView.setTraffic(false);
             mapController.setZoom(16);
+            
         }
-	    FirstStart();
-	    
+	    FirstStart(); 
 	} // End of onCreate
 	
 	//第一次執行顯示的說明
 	private void FirstStart() {
-		
-		
+		// TODO 尚未建立說明code
 	}
 
 	//Menu 的顯示
@@ -275,106 +276,74 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		return super.onOptionsItemSelected(item);
 	}
 	
+	//設定GPS區間
 	private void SettingGPSinterval() {
-		
+		//Layout配置
 		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		View layout = inflater.inflate(R.layout.menu, (ViewGroup) findViewById(R.layout.main));
+		
+		//對話配置
 		AlertDialog.Builder builder = new AlertDialog.Builder(this)
 		.setView(layout);
 		AlertDialog alertDialog = builder.create();
-		alertDialog.show();
-		
-		SeekBar seekBarStart = (SeekBar)layout.findViewById(R.id.seekBar1);
-	    final TextView seekBarValueStart = (TextView)layout.findViewById(R.id.seekValueStart);  
-	    SeekBar seekBarEnd = (SeekBar)findViewById(R.id.seekBar2);  
-	    final TextView seekBarValueEnd = (TextView)layout.findViewById(R.id.seekValueEnd);
-	    
-	    seekBarStart.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-		public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
-			seekBarValueStart.setText(String.valueOf(progress));
-        	timeStart = progress;
-        	Log.w("ProBar","timeStart " + progress);
-		        }
-
-		public void onStartTrackingTouch(SeekBar seekBar) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		public void onStopTrackingTouch(SeekBar seekBar) {
-			// TODO Auto-generated method stub
-			
-		}
-		    });
-
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		/*
-		LayoutInflater factory = LayoutInflater.from(this);            
-				
-		// 定義 menu.xml 為將要顯示的 textEntryView
-		final View textEntryView = factory.inflate(R.layout.menu, null);
-
-		AlertDialog.Builder alert = new AlertDialog.Builder(this);
-
-		alert.setTitle(R.string.dialog_select_position); // "選擇座標"
-		alert.setMessage(R.string.dialog_select_inside); // "請輸入欲前往的座標"
-		
-		alert.setView(textEntryView);
-
-		alert.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() 
+		alertDialog.setTitle("選擇無 GPS 區間");
+		alertDialog.setMessage("時間以百分比表示並且\n結束時間必須大於開始時間");
+		alertDialog.setButton("重建", new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int whichButton) {
-				//dialog_user_input_lat  = Double.parseDouble(input_lat.getText().toString());
-				//dialog_user_input_long = Double.parseDouble(input_long.getText().toString());
-				process_dialog_input(dialog_user_input_lat, dialog_user_input_long);
+				
 			}
 		});
 
-		alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+		alertDialog.setButton2("取消", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
 				 // Canceled.
 			}
 		});
-
-		alert.show();
+		alertDialog.show();
 		
-		SeekBar seekBarStart = (SeekBar)findViewById(R.id.seekBar1);  
-	    final TextView seekBarValueStart = (TextView)findViewById(R.id.seekValueStart);  
-	    SeekBar seekBarEnd = (SeekBar)findViewById(R.id.seekBar2);  
-	    final TextView seekBarValueEnd = (TextView)findViewById(R.id.seekValueEnd);
+		/* 取得元件 */
+		SeekBar seekBarStart = (SeekBar)layout.findViewById(R.id.seekBar1);
+	    final TextView seekBarValueStart = (TextView)layout.findViewById(R.id.seekValueStart);  
+	    SeekBar seekBarEnd =   (SeekBar)layout.findViewById(R.id.seekBar2);  
+	    final TextView seekBarValueEnd = (TextView)layout.findViewById(R.id.seekValueEnd);
+	    ToggleButton toggleGPS = (ToggleButton)layout.findViewById(R.id.toggleButton1);
 	    
 	    seekBarStart.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-	        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
-	        	seekBarValueStart.setText(String.valueOf(progress));
-	        	timeStart = progress;
-	        }
+	    	public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
+	    		seekBarValueStart.setText(String.valueOf(progress) + "%");
+	    		timeStart = progress;
+		        	}
+
+	    	public void onStartTrackingTouch(SeekBar seekBar) {
+	    		}
+	    	public void onStopTrackingTouch(SeekBar seekBar) {}
+		    	});
+	    
+	    seekBarEnd.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
+				seekBarValueEnd.setText(String.valueOf(progress) + "%");
+	        	timeEnd = progress;
+			        }
 
 			public void onStartTrackingTouch(SeekBar seekBar) {
-					
+				
 			}
 
 			public void onStopTrackingTouch(SeekBar seekBar) {
 				
-			}
-	    });
-	    */
-	    
+			}});
+		
+	    toggleGPS.setOnCheckedChangeListener(new ToggleButton.OnCheckedChangeListener() { 
+	        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+	            if (isChecked) {
+	            	isGpsDisplay = true;
+	                Log.d("開關", "已開啟，表示GPS路徑要顯示");
+	            } else {
+	            	isGpsDisplay = false;
+	                Log.d("開關", "已關閉，表示GPS路徑不顯示");
+	            }
+	        }});
 	}
 
 	//移動 mapView 到使用者現在的位置
@@ -387,29 +356,9 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	    return false;
 	}
 	
-	//尋找路口
-	public void findIntersection(){
-		findIntersection = new FindIntersection();
-		my_intersection = findIntersection.findIntersec(debug_before1, debug_before2,debug_after,false,1); //尋找路口，不要lookback
-		
-		if(my_intersection != null){
-			if(my_intersection.equals(taipei_station)){
-				Toast.makeText(HelloGoogleMapActivity.this, "找不到路口！", Toast.LENGTH_SHORT).show();
-			}else{
-				StringBuffer msg = new StringBuffer();
-				msg.append("路口緯度: ");
-				msg.append(Double.toString( ((double)my_intersection.getLatitudeE6()   ) / GEO));
-				msg.append("\n路口經度: ");
-				msg.append(Double.toString( ((double)my_intersection.getLongitudeE6()  ) / GEO));
-				Toast.makeText(HelloGoogleMapActivity.this, msg, Toast.LENGTH_LONG).show();
-			}
-		}
-	}
-	
 	//實作"選擇資料"
 	private void SelectData()
 	{
-		// 呼叫新的 layout 讓使用者輸入經緯度
 		LayoutInflater factory = LayoutInflater.from(this);            
 				
 		// 定義 menu.xml 為將要顯示的 textEntryView
@@ -422,16 +371,19 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	
 		alert.setView(textEntryView);
 
-		alert.setPositiveButton("使用OBD", new DialogInterface.OnClickListener() 
+		alert.setPositiveButton("開啟檔案", new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int whichButton) {
-				isOBDusing = true;
+				
+				Intent intent1 = new Intent(HelloGoogleMapActivity.this, FileListView.class);
+				intent1.putExtra("FromAppMain", "appMain");
+				startActivityForResult(intent1, REQUEST_CODE);
 			}
 		});
 
-		alert.setNegativeButton("使用感測器", new DialogInterface.OnClickListener() {
+		alert.setNegativeButton("取消", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
-				isOBDusing = false;
+				//isOBDusing = false;
 			}
 		});
 		alert.setIcon(R.drawable.ic_menu_info);
@@ -439,6 +391,28 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		
 	}
 	
+	//切換  Activity 所回傳的code
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+		if (requestCode == REQUEST_CODE)
+		{
+			if (resultCode == RESULT_OK)
+			{
+				String temp = null;
+				Bundle extras = data.getExtras();
+				if (extras != null)
+				{
+					temp = extras.getString("FromActivity1");
+				}
+				Log.d("切換 Activity","傳回資料: " + temp);
+				userSelectFileName = temp;
+				setTitle(temp);
+			}
+		}
+	}
+	
+	//開始畫線功能
 	public void setview(){
 		ol = mapView.getOverlays();
         ol.clear();
@@ -470,7 +444,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		handler.sendEmptyMessage(0);
 	}
 
-	//蛋疼的 android....
+	//處理執行緒間的資料傳遞
 	private Handler handler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
@@ -482,26 +456,28 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	//處理使用者資料，在按下選擇資料來源之後
 	private void processPathRecovery(){
 		
-		pd = ProgressDialog.show(this, "請稍後", "重建路徑中", true,
-				false);
+		pd = ProgressDialog.show(this, "重建路徑中", 
+				"\n檔案名稱: " + userSelectFileName +
+				"\n資料來源: OBD" +
+				"\n正在與 Google Map 溝通" +
+				"\n需要時間依網路狀況而定" +
+				"\n請耐心稍後!"
+				, true, false);
 
 		Thread thread = new Thread(this);
 		thread.start();
 		
 	}
 	
-	//處理使用者輸入的定點座標
-	protected void process_dialog_input(double _lat, double _long) {
-		MapView mapView = (MapView) findViewById(R.id.mapview);
-	    MapController mapController = mapView.getController();
-	    
-	    GeoPoint user_spec = new GeoPoint((int)(_lat*GEO), (int)(_long*GEO));
-	    my_destination = new GeoPoint((int)(_lat*GEO), (int)(_long*GEO));
-	    mapController.animateTo(user_spec);
-		mapController.setZoom(19);
-		Toast.makeText(HelloGoogleMapActivity.this, "已完成設定目標，可以開始生成路徑", Toast.LENGTH_SHORT).show();
-		
+	//傳回是否使用OBD
+	public String returnOBD(){
+		if(isOBDusing){
+			return "OBD";
+		}else{
+			return "感測器";
+		}
 	}
+	
 	
 
 /* *** 以下是 Google Path 要求 ****/
@@ -641,7 +617,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	            myPaint.setColor(Color.BLUE);
 	            myPaint.setStyle(Paint.Style.STROKE);
 	            myPaint.setStrokeWidth(7);
-	            myPaint.setAlpha(70);
+	            myPaint.setAlpha(255);
 	            
                 boolean turn = true;
                 

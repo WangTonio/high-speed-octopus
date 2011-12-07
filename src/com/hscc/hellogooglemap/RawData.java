@@ -54,10 +54,12 @@ public class RawData{
 						String[] arr = InputLine.split(" ");
 						
 						//// Debug
+						/*
 						for (String e:arr){
 							Log.d("e",e+".");
 						}
-						
+						*/
+
 						// 把 array 裏的資料加到 list 裏
 						if ( arr[0].equals("START") ){
 							
