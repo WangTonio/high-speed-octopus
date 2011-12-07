@@ -4,8 +4,6 @@
 
 package com.hscc.hellogooglemap;
 
-import android.util.Log;
-
 import com.google.android.maps.GeoPoint;
 
 public class Line {

@@ -72,11 +72,8 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	protected static int onRecord = 0;
 	
 	GeoPoint FirstPoint;
-	GeoPoint debug_before1 = new GeoPoint((int)(24.144600*GEO),(int)(120.694460*GEO));
-	GeoPoint debug_before2 = new GeoPoint((int)(24.144257*GEO),(int)(120.694476*GEO));
-	GeoPoint debug_after   = new GeoPoint((int)(24.144590*GEO),(int)(120.694816*GEO));
-	GeoPoint point  = new GeoPoint(19240000, -99120000);
-	GeoPoint point2 = new GeoPoint(35410000, 139460000);
+	GeoPoint point  		  = new GeoPoint(19240000, -99120000);
+	GeoPoint point2 		  = new GeoPoint(35410000, 139460000);
 	GeoPoint taipei_station   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
 	GeoPoint taichung_station = new GeoPoint( (int)(24.136895*GEO),(int)(120.684975*GEO));
 	// default location is set to be TaichungTrainStation
@@ -84,7 +81,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	GeoPoint my_destination   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
 	GeoPoint my_intersection  = null;
 	GeoPoint my_pointTo		  = new GeoPoint( (int)(25.041111*GEO),(int)(121.516111*GEO));
-	private List<GeoPoint> _points = new ArrayList<GeoPoint>(); //hold the path signature
+	private List<GeoPoint> _points    = new ArrayList<GeoPoint>(); //hold the path signature
 	private List<GeoPoint> pathPoints = new ArrayList<GeoPoint>();
 	private ProgressDialog pd; //轉圈圈
 
@@ -105,7 +102,10 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
     int timeEnd   = 100;
     public String userSelectFileName;
 	protected Tracking TrackObj;
+	private List<GeoPoint> FrontGPS;
 	private List<GeoPoint> trackingResult;
+	private List<GeoPoint> BackGPS;
+	private int totalGPSdataSize = 0;
 	List<com.google.android.maps.Overlay> ol;
 	
 	protected final LocationListener LocListener = new LocationListener(){
@@ -127,17 +127,14 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		}
 
 		public void onProviderDisabled(String provider) {
-			// TODO Auto-generated method stub
 			
 		}
 
 		public void onProviderEnabled(String provider) {
-			// TODO Auto-generated method stub
 			
 		}
 
 		public void onStatusChanged(String provider, int status, Bundle extras) {
-			// TODO Auto-generated method stub
 			
 		}
 	};
@@ -184,27 +181,27 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		
 		menu.add(0, MENU_QUICK1, 0, "現在位置")
 			.setIcon(R.drawable.ic_menu_location);
-		menu.add(0, MENU_QUICK2, 1, "路徑重建")
-			.setIcon(R.drawable.ic_menu_to);
-		menu.add(0, MENU_QUICK3, 2, "清除路徑")
-			.setIcon(R.drawable.ic_menu_garbage);
-		menu.add(0, MENU_QUICK4, 3, "選擇資料")
+		menu.add(0, MENU_QUICK4, 1, "選擇資料")
 			.setIcon(R.drawable.ic_menu_loopbin);
-		menu.add(0, MENU_ABOUT , 4, "設定GPS區間")
+		menu.add(0, MENU_ABOUT , 2, "設定GPS區間")
 			.setIcon(R.drawable.ic_menu_pin);
+		menu.add(0, MENU_QUICK2, 3, "路徑重建")
+			.setIcon(R.drawable.ic_menu_to);
+		menu.add(0, MENU_QUICK3, 4, "清除路徑")
+			.setIcon(R.drawable.ic_menu_garbage);
 		menu.add(0, MENU_QUIT  , 5, "結束")
 			.setIcon(R.drawable.ic_menu_icon1);
 		
 		menu.add(1, MENU_QUICK1, 0, "現在位置")
 			.setIcon(R.drawable.ic_menu_location);
-		menu.add(1, MENU_QUICK2, 1, "路徑重建")
-			.setIcon(R.drawable.ic_menu_to);
-		menu.add(1, MENU_QUICK3, 2, "清除路徑")
-			.setIcon(R.drawable.ic_menu_garbage);
-		menu.add(1, MENU_QUICK4, 3, "選擇資料")
+		menu.add(1, MENU_QUICK4, 1, "選擇資料")
 			.setIcon(R.drawable.ic_menu_loopbin);
-		menu.add(1, MENU_ABOUT , 4, "設定GPS區間")
+		menu.add(1, MENU_ABOUT , 2, "設定GPS區間")
 			.setIcon(R.drawable.ic_menu_pin);
+		menu.add(1, MENU_QUICK2, 3, "路徑重建")
+			.setIcon(R.drawable.ic_menu_to);
+		menu.add(1, MENU_QUICK3, 4, "清除路徑")
+			.setIcon(R.drawable.ic_menu_garbage);
 		menu.add(1, MENU_QUIT  , 5, "結束")
 			.setIcon(R.drawable.ic_menu_icon1);
 		
@@ -322,9 +319,14 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	    
 	    seekBarEnd.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
-				seekBarValueEnd.setText(String.valueOf(progress) + "%");
-	        	timeEnd = progress;
-			        }
+				if( progress < timeStart){
+					seekBarValueEnd.setText("  請選擇比Start百分比更大的數字!");
+					timeEnd = 100;
+				}else{
+					seekBarValueEnd.setText(String.valueOf(progress) + "%");
+					timeEnd = progress;
+				}
+			}
 
 			public void onStartTrackingTouch(SeekBar seekBar) {
 				
@@ -431,6 +433,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	//建立一個新的執行緒，用來一邊跑進度圈圈一邊跑重建路徑，但受限於android API，MapView必須在handler那邊執行
 	public void run() {
 		TrackObj = new Tracking(isOBDusing);
+		totalGPSdataSize = TrackObj.AnalyzedData.myData.DataList.size();
 		trackingResult = new ArrayList<GeoPoint>();
 		trackingResult.add(TrackObj.StartPoint);
 		for(Intersection a : TrackObj.ForwardIntersection){
@@ -452,13 +455,14 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 			pd.dismiss();
 		}
 	};
+
 	
 	//處理使用者資料，在按下選擇資料來源之後
 	private void processPathRecovery(){
 		
 		pd = ProgressDialog.show(this, "重建路徑中", 
 				"\n檔案名稱: " + userSelectFileName +
-				"\n資料來源: OBD" +
+				"\n資料來源: " + returnOBD() +
 				"\n正在與 Google Map 溝通" +
 				"\n需要時間依網路狀況而定" +
 				"\n請耐心稍後!"
@@ -478,8 +482,81 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		}
 	}
 	
-	
+	//在所有的GPS座標群內化簡 index 從 indexStart 到 indexEnd 的點集
+	public void eliminateGpsPoint(int indexStart, int indexEnd){
+		ArrayList<Location> temp =  new ArrayList<Location>();
+		ArrayList<Location> rslt =  new ArrayList<Location>();
+		ArrayList<SenseRecord> curn = new ArrayList<SenseRecord>();
+		int target = 0;
+		if(indexStart == 1){ //表示現在是在 tracking 前端
+			target = 1;
+		}else if(indexEnd == totalGPSdataSize){ //表示現在是在 tracking 後端
+			target = 2;
+		}
+		
+		//將所有GPS皆放入temp裡面
+		for(SenseRecord involve: TrackObj.AnalyzedData.myData.DataList ){
+			curn.add(involve);
+		}
+		
+		for(int i = indexStart; i < indexEnd; i++){
+			Location now = new Location("");
+			float latitude =  curn.get(i).GPSLocation.getLatitudeE6() / 1000000F;
+			float longitude = curn.get(i).GPSLocation.getLongitudeE6() / 1000000F;
+			now.setLatitude(latitude);
+			now.setLongitude(longitude);
+			temp.add(now);
+		}
+		
+		reduceGPS mGPS = new reduceGPS();
+		if(target == 1){
+			mGPS.decimate(150f,temp,rslt);
+			for(Location now: rslt){
+				int lat = (int)(now.getLatitude()/GEO);
+				int lng = (int)(now.getLongitude()/GEO);
+				GeoPoint b = new GeoPoint(lat,lng);
+				FrontGPS.add(b);
+			}
+		}else{
+			mGPS.decimate(150f,temp,rslt);
+			for(Location now: rslt){
+				int lat = (int)(now.getLatitude()/GEO);
+				int lng = (int)(now.getLongitude()/GEO);
+				GeoPoint b = new GeoPoint(lat,lng);
+				BackGPS.add(b);
+			}
+		}	
+	}
 
+	//計算兩個 GeoPoint 間的夾角
+	public double bearing(GeoPoint start, GeoPoint dest){
+		double lat1 = toRad((double)start.getLatitudeE6()/GEO);
+		double lat2 = toRad((double)dest.getLatitudeE6() /GEO);
+		double lon1 = toRad((double)start.getLongitudeE6()/GEO);
+		double lon2 = toRad((double)dest.getLongitudeE6() /GEO);
+		double dLon = (lon2-lon1);
+
+		double y = Math.sin(dLon) * Math.cos(lat2);
+		double x = Math.cos(lat1)*Math.sin(lat2) -
+		           Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+		double answer = toDeg(Math.atan2(y, x));
+		
+		if(answer < 0)
+			answer += 360;
+		
+		return answer;
+	}
+	
+	//轉成弧度
+	public double toRad(double number){
+		return number*Math.PI/180.0;
+	}
+	
+	//轉成角度
+	public double toDeg(double number){
+		return number*180.0/Math.PI;
+	}
+	
 /* *** 以下是 Google Path 要求 ****/
 	//The following function is made for PATH CALCULATION	
 	public List<GeoPoint> GetDirection(GeoPoint Destination)
@@ -614,14 +691,12 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	            Path myPath = new Path();
 	                          
 	            Paint myPaint = new Paint();
-	            myPaint.setColor(Color.BLUE);
 	            myPaint.setStyle(Paint.Style.STROKE);
 	            myPaint.setStrokeWidth(7);
 	            myPaint.setAlpha(255);
-	            
                 boolean turn = true;
                 
-                //Log.d("畫線","資料量: " + trackingResult.size());
+                myPaint.setColor(Color.BLUE);
 	            for(GeoPoint point : trackingResult){
 	            	if(turn){
 	            		out = p.toPixels(point, out);
@@ -634,6 +709,37 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	                	myPath.moveTo(out.x, out.y);	
 	            	}
 				}  
+	            
+	            turn = true;
+	            myPaint.setColor(Color.RED);
+	            for(GeoPoint point : FrontGPS){
+	            	if(turn){
+	            		out = p.toPixels(point, out);
+	            		myPath.moveTo(out.x, out.y);
+	                    turn = false;
+	            	}else{
+	            		out = p.toPixels(point, out);
+	                    myPath.lineTo(out.x, out.y);
+	                	canvas.drawPath(myPath, myPaint);
+	                	myPath.moveTo(out.x, out.y);	
+	            	}
+				}  
+	            
+	            turn = true;
+	            myPaint.setColor(Color.RED);
+	            for(GeoPoint point : BackGPS){
+	            	if(turn){
+	            		out = p.toPixels(point, out);
+	            		myPath.moveTo(out.x, out.y);
+	                    turn = false;
+	            	}else{
+	            		out = p.toPixels(point, out);
+	                    myPath.lineTo(out.x, out.y);
+	                	canvas.drawPath(myPath, myPaint);
+	                	myPath.moveTo(out.x, out.y);	
+	            	}
+				}  
+	            
 	            mapView.invalidate();
 	        }
 	        return true;

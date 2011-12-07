@@ -61,7 +61,7 @@ public class FileListView extends ListActivity{
 			}
 		});
 	  
-		setTitle("選擇檔案");
+		setTitle("選擇檔案 :   /SDCard/iTaxi ");
 		
 		
 		bul_Extra = getIntent().getExtras();
