@@ -9,8 +9,8 @@
     <string name="buttom_debug">偵錯資訊</string>
     <string name="text_display_front">這裡用來顯示一些資訊</string>
     <string name="menu_title">系統選單</string>
-    <string name="dialog_select_position">選擇座標</string>
-    <string name="dialog_select_inside">請輸入欲前往的座標</string>
+    <string name="dialog_select_position">設定GPS範圍</string>
+    <string name="dialog_select_inside">請設定不使用GPS的區間</string>
     <string name="ok">好！</string>
     <string name="cancel">取消</string>
     <string name="dialog_lat_title">請輸入緯度</string>
