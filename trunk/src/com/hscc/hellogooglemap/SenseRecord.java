@@ -9,6 +9,7 @@ public class SenseRecord {
 	protected double Direction;
 	protected boolean Intersection;  // TRUE, If this record is intersection point. 
 	protected GeoPoint Location;
+	protected GeoPoint GPSLocation;
 	
 	
 	public SenseRecord(long timestamp, double speed, double direction){
@@ -40,6 +41,10 @@ public class SenseRecord {
 	
 	public GeoPoint getLocation(){
 		return Location;
+	}
+	
+	public GeoPoint getGPSLocation(){
+		return GPSLocation;
 	}
 	
 	public boolean isIntersection(){
