@@ -278,21 +278,22 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	private void SettingGPSinterval() {
 		
 		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		View layout = inflater.inflate(R.layout.menu, (ViewGroup) findViewById(R.layout.menu));
+		View layout = inflater.inflate(R.layout.menu, (ViewGroup) findViewById(R.layout.main));
 		AlertDialog.Builder builder = new AlertDialog.Builder(this)
 		.setView(layout);
 		AlertDialog alertDialog = builder.create();
 		alertDialog.show();
 		
 		SeekBar seekBarStart = (SeekBar)layout.findViewById(R.id.seekBar1);
-	    final TextView seekBarValueStart = (TextView)findViewById(R.id.seekValueStart);  
+	    final TextView seekBarValueStart = (TextView)layout.findViewById(R.id.seekValueStart);  
 	    SeekBar seekBarEnd = (SeekBar)findViewById(R.id.seekBar2);  
-	    final TextView seekBarValueEnd = (TextView)findViewById(R.id.seekValueEnd);
+	    final TextView seekBarValueEnd = (TextView)layout.findViewById(R.id.seekValueEnd);
 	    
 	    seekBarStart.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 		public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
 			seekBarValueStart.setText(String.valueOf(progress));
         	timeStart = progress;
+        	Log.w("ProBar","timeStart " + progress);
 		        }
 
 		public void onStartTrackingTouch(SeekBar seekBar) {
