@@ -23,21 +23,32 @@ public class Tracking {
 	GeoPoint StartPoint;
 	GeoPoint EndPoint;
 	public int MiddleIndex;
+	public int startIdx, endIdx;
 	
 	public Tracking(String filename, boolean useOBD, int startPercent, int endPercent){
+		
+		int listSize;
+
 		
 		// 0. 初始化資料
 		AnalyzedData = new AnalysisRawData(filename, useOBD, startPercent, endPercent);  
 		ForwardIntersection = new ArrayList<Intersection>();
 		BackwardIntersection = new ArrayList<Intersection>();
 		
+		listSize = AnalyzedData.myData.DataList.size();
+		startIdx = listSize * startPercent / 100;
+		endIdx   = listSize * endPercent / 100 - 1;
+		
+		Log.d("Start & End Index", "Start:"+startIdx+", End:"+endIdx);
+		
+		
 		StartPoint = new GeoPoint(
-				AnalyzedData.myData.StartPoint.getLatitudeE6(),
-				AnalyzedData.myData.StartPoint.getLongitudeE6()
+				AnalyzedData.myData.DataList.get(startIdx).GPSLocation.getLatitudeE6(),
+				AnalyzedData.myData.DataList.get(startIdx).GPSLocation.getLongitudeE6()
 				);
 		EndPoint = new GeoPoint(
-				AnalyzedData.myData.EndPoint.getLatitudeE6(),
-				AnalyzedData.myData.EndPoint.getLongitudeE6()
+				AnalyzedData.myData.DataList.get(endIdx).GPSLocation.getLatitudeE6(),
+				AnalyzedData.myData.DataList.get(endIdx).GPSLocation.getLongitudeE6()
 				);
 		
 		 
@@ -45,16 +56,14 @@ public class Tracking {
 		// 1. 從 RawData 中找出所有的 intersection
 		int numIntersection = AnalyzedData.myData.totalIntersection;
 		
-		// Debug
-		Log.d("numIntersection", ""+numIntersection);
-		
 		int count = 0;
 		int size = AnalyzedData.myData.DataList.size();
 		
 		// Debug
-		Log.d("DataList size", ""+size);
+		Log.d("numIntersection", "(use percent): "+numIntersection);		
+		Log.d("DataList size", ""+(startIdx-endIdx+1));
 		
-		for (int i = 0; i < size; i++){
+		for (int i = startIdx; i <= endIdx; i++){
 			if (AnalyzedData.myData.DataList.get(i).Intersection == true){
 				if (count < (int)(numIntersection/2)){
 					ForwardIntersection.add(new Intersection(i));
@@ -70,16 +79,14 @@ public class Tracking {
 		// 2. 找出中間點
 		int a, b;
 		int fi = ForwardIntersection.size() - 1;
-		// Debug
-		Log.d("Middle index", "fi: "+fi);
+
 		a = ForwardIntersection.get(fi).Index;
-		
-		
-		
 		b = BackwardIntersection.get(0).Index;
 		MiddleIndex = (a + b) / 2;
 		
-		Log.e("MiddleIndex", ""+MiddleIndex);
+		// Debug
+		Log.d("Middleindex", "F intersection list size: "+fi);
+		Log.e("MiddleIndex", "a:"+ a + ", b:" + b +", Mid:"+MiddleIndex);
 
 		
 		// 3. startTracking
@@ -106,16 +113,14 @@ public class Tracking {
 		
 		// 2. BackwardTracking
 		GeoPoint BackwardEnd = BackwardTracking(EndPoint, MiddleIndex + 1);
-		
 
+		//GeoPoint a = new GeoPoint(24802041, 120995385);
+		//GeoPoint b = new GeoPoint(24799002, 120993518);
+		//Log.d("Distance Range", ""+AnalyzedData.distance(a, b));
 		
 		// 3. 判斷 F 的終點跟 B 的終點的距離是否在合理範圍
 		// 4. 若是, 所有 intersection 的點就確定了
 		// 5. 若否....(Big problem here...)
-		GeoPoint a = new GeoPoint(24802041, 120995385);
-		GeoPoint b = new GeoPoint(24799002, 120993518);
-		Log.d("Distance Range", ""+AnalyzedData.distance(a, b));
-
 		FBDistance = AnalyzedData.distance(ForwardEnd, BackwardEnd);
 		if (FBDistance < DISTANCE_RANGE){
 			Log.d("Tracking Success!", ""+FBDistance);
@@ -145,10 +150,10 @@ public class Tracking {
 		FindIntersection iCalculator = new FindIntersection();
 		
 		Fi = 0;
-		record = AnalyzedData.myData.DataList.get(0);
+		record = AnalyzedData.myData.DataList.get(startIdx);
 		direction = record.getDirection();
 		distance = record.getSpeed()*RECORD_INTERVAL/1000;	
-		location = AnalyzedData.findDest(StartPoint, direction, distance);
+		location = AnalyzedData.findDest(Start, direction, distance);
 		record.setLocation(location);
 		
 		// for debug
@@ -157,7 +162,7 @@ public class Tracking {
 		Log.e("ForwardTracking 0", "lat: "+location.getLatitudeE6()+". lon: "+location.getLongitudeE6());
 		//
 		
-		for (int i = 1; i <= StopIndex; i++){
+		for (int i = startIdx+1; i <= StopIndex; i++){  /**/
 			record = AnalyzedData.myData.DataList.get(i);
 			
 			if (record.Intersection == false){
@@ -252,12 +257,13 @@ public class Tracking {
 		Bi = Bsize - 1;
 		
 		// 從最後一點開始 BackTracking
-		lastRecordIndex = AnalyzedData.myData.DataList.size() - 1;
+		//lastRecordIndex = AnalyzedData.myData.DataList.size() - 1;
+		lastRecordIndex = endIdx;
 		record = AnalyzedData.myData.DataList.get(lastRecordIndex);
 		
 		direction = (record.getDirection()+180) % 360;  // Backward tracking, 方向相反
 		distance = record.getSpeed()*RECORD_INTERVAL/1000;
-		location = AnalyzedData.findDest(EndPoint, direction, distance);
+		location = AnalyzedData.findDest(End, direction, distance);
 		record.setLocation(location);
 		
 		// Debug
@@ -368,8 +374,8 @@ public class Tracking {
 	private void CalculatePath(boolean isSuccess){
 		FindIntersection f = new FindIntersection();
 		List<GeoPoint> tempList;
-		List<GeoPoint> inverseTempList;
-		int TLsize, ITLsize;
+		//List<GeoPoint> inverseTempList;
+		//int TLsize, ITLsize;
 		
 		GeoPoint prePoint;
 		
@@ -377,6 +383,7 @@ public class Tracking {
 			ReturnList.add(StartPoint);
 			prePoint = StartPoint; 
 			for (Intersection intersection : ForwardIntersection){
+				/*
 				tempList = f.GetDirection(prePoint, intersection.PredictLocation);
 				inverseTempList = f.GetDirection(intersection.PredictLocation, prePoint);
 				TLsize = tempList.size();
@@ -391,10 +398,14 @@ public class Tracking {
 						ReturnList.add(inverseTempList.get(j));
 					}
 				}
+				*/
+				ReturnList.add(intersection.PredictLocation);
 				prePoint = intersection.PredictLocation;
+				
 			}
 			
 			for (Intersection intersection : BackwardIntersection){
+				/*
 				tempList = f.GetDirection(prePoint, intersection.PredictLocation);
 				inverseTempList = f.GetDirection(intersection.PredictLocation, prePoint);
 				TLsize = tempList.size();
@@ -407,8 +418,9 @@ public class Tracking {
 						ReturnList.add(inverseTempList.get(j));
 					}
 				}
+				*/
+				ReturnList.add(intersection.PredictLocation);
 				prePoint = intersection.PredictLocation;
-				break;
 			}
 			/*
 			tempList = f.GetDirection(prePoint, EndPoint);
@@ -416,7 +428,7 @@ public class Tracking {
 			ReturnList.addAll(tempList);
 			*/
 			
-		} else {
+		} else {  // 路徑重建失敗
 			
 			int Fsize = ForwardIntersection.size();
 			int Bsize = BackwardIntersection.size();
@@ -425,25 +437,36 @@ public class Tracking {
 			
 			ReturnList.add(StartPoint);
 			prePoint = StartPoint;
-			for (int i = 0; i < Fsize - 1; i++){
+			if(Fsize > 1){
+				for (int i = 0; i < Fsize - 1; i++){
+					ReturnList.add(ForwardIntersection.get(i).PredictLocation);
+					prePoint = ForwardIntersection.get(i).PredictLocation;
+				}	
+			}
+			
+			if(Bsize > 1){
+				
+				// 問 Google 連接　Forward & Backward 的 intersection
 				x = prePoint;
-				y = ForwardIntersection.get(i).PredictLocation;
+				y = BackwardIntersection.get(1).PredictLocation;
 				tempList = f.GetDirection(x, y);
 				tempList.remove(0);
 				ReturnList.addAll(tempList);
-				prePoint = ForwardIntersection.get(i).PredictLocation;
-			}
-			for (int i = 1; i < Bsize; i++){
+				
+				// 連接  Backward 剩下的 intersection
+				for (int i = 2; i < Bsize; i++){
+					ReturnList.add(BackwardIntersection.get(i).PredictLocation);
+					prePoint = BackwardIntersection.get(i).PredictLocation;
+				}
+				ReturnList.add(EndPoint);
+				
+			} else { 
 				x = prePoint;
-				y = BackwardIntersection.get(i).PredictLocation;
+				y = EndPoint;
 				tempList = f.GetDirection(x, y);
 				tempList.remove(0);
 				ReturnList.addAll(tempList);
-				prePoint = BackwardIntersection.get(i).PredictLocation;
 			}
-			tempList = f.GetDirection(prePoint, EndPoint);
-			tempList.remove(0);
-			ReturnList.addAll(tempList);
 		}
 	}
 	
