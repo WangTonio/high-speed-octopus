@@ -16,7 +16,7 @@ public class SenseRecord {
 		TimeStamp = timestamp;
 		Speed = speed;
 		Direction = direction;
-		GPSLocation = new GeoPoint((int)lat*1000000, (int)lon*1000000);
+		GPSLocation = new GeoPoint((int)(lat*1000000), (int)(lon*1000000));
 		Intersection = false;
 	}
 	

@@ -11,7 +11,7 @@ public class AnalysisRawData {
 	public int turnLook = 16;                  //判斷是否轉彎所需要的資料量
 	public double R = 6371;                   //地球半徑(km)
 	public static final int GEO = 1000000;    //GeoPoint轉經緯度常數
-	
+	int startIdx, endIdx;	
 	
 	//預設建構子
 	AnalysisRawData(String filename, boolean useOBD, int startPercent, int endPercent){	
@@ -20,16 +20,16 @@ public class AnalysisRawData {
 		
 	//初始化感測資料
 	private void initialization(String filename, boolean useOBD, int startPercent, int endPercent){
-		int startIdx, endIdx;
+
 		myData = new RawData(filename, useOBD, startPercent, endPercent);
 		mySize = myData.DataList.size();
-		startIdx = mySize * (startPercent/100);
-		endIdx   = mySize * (endPercent/100) - 1;
+		startIdx = mySize * startPercent / 100;
+		endIdx   = mySize * endPercent / 100 - 1;
 		
-		fillIntersec(startIdx, endIdx);
+		fillIntersec();
 	}
 	
-	public void fillIntersec(int startIdx, int endIdx){
+	public void fillIntersec(){
 		counterType counter     = new counterType();
 		turnType    currentTurn = new turnType();
 		boolean	isRush = false;
