@@ -24,10 +24,10 @@ public class Tracking {
 	GeoPoint EndPoint;
 	public int MiddleIndex;
 	
-	public Tracking(boolean useOBD){
+	public Tracking(String filename, boolean useOBD, int startPercent, int endPercent){
 		
 		// 0. 初始化資料
-		AnalyzedData = new AnalysisRawData(useOBD);  
+		AnalyzedData = new AnalysisRawData(filename, useOBD, startPercent, endPercent);  
 		ForwardIntersection = new ArrayList<Intersection>();
 		BackwardIntersection = new ArrayList<Intersection>();
 		

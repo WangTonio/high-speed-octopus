@@ -18,7 +18,7 @@ public class RawData{
 	public int totalIntersection = 0;	// total number of intersection in this Record set.
 	public ArrayList<SenseRecord> DataList = new ArrayList<SenseRecord>();
 	
-	public RawData(boolean useOBD){
+	public RawData(String filename, boolean useOBD, int startPercent, int endPercent){
 		
 		
 		// For debug
@@ -31,64 +31,56 @@ public class RawData{
 		
 		
 		// 從 SD 卡開啟檔案
-		String filename = "RawData.txt";
+		String foldername = "iTaxi";
 		try {
 			if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
 				FileInputStream DataFile = new FileInputStream(
-						Environment.getExternalStorageDirectory() + "/" + filename);
+						Environment.getExternalStorageDirectory() + "/" + foldername + "/" + filename);
 				
 				if (DataFile != null){
 					
 					long TimeStamp;
 					double Speed;
 					double Direction;
+					double Lat, Lon;
 					String InputLine = "";
 					
 					InputStreamReader iStream = new InputStreamReader(DataFile);
 					BufferedReader bReader = new BufferedReader(iStream);
 					
 					// 逐行讀取
-					while((InputLine = bReader.readLine())!=null){
-
-						// 依空白格分割 line 成  array
+					if ((InputLine = bReader.readLine())!=null){
 						String[] arr = InputLine.split(" ");
 						
-						//// Debug
-						/*
-						for (String e:arr){
-							Log.d("e",e+".");
-						}
-						*/
+						if ( arr[0].equals("#SENSOR") || arr[0].equals("#OBD")){
+							
+							while((InputLine = bReader.readLine())!=null){
 
-						// 把 array 裏的資料加到 list 裏
-						if ( arr[0].equals("START") ){
-							
-							StartPoint = new GeoPoint(
-									(int)(Double.parseDouble(arr[1].trim())*1000000), 
-									(int)(Double.parseDouble(arr[2].trim())*1000000));
-							
-						} else if( arr[0].equals("END") ){
-							
-							EndPoint = new GeoPoint(
-									(int)(Double.parseDouble(arr[1].trim())*1000000),
-									(int)(Double.parseDouble(arr[2].trim())*1000000));
-							
-						} else {
-							
-							if (useOBD){
-								Speed = Double.parseDouble(arr[4].trim());
-							} else {
-								Speed = Double.parseDouble(arr[1].trim());
+								// 依空白格分割 line 成  array
+								arr = InputLine.split(" ");
+
+								// 把 array 裏的資料加到 list 裏
+								TimeStamp = Long.parseLong(arr[1].trim());  // 去除空白
+								// Log.d("TimeStamp", TimeStamp+".");
+								
+								Speed = Double.parseDouble(arr[2].trim());
+								// Log.d("Speed",Speed+".");
+								
+								Direction = Double.parseDouble(arr[3].trim());
+								// Log.d("Direction", Direction+".");
+								
+								Lat = Double.parseDouble(arr[4].trim());
+								
+								Lon = Double.parseDouble(arr[5].trim());
+								
+								SenseRecord sRecord = new SenseRecord(TimeStamp, Speed, Direction, Lat, Lon);
+								DataList.add(sRecord);
 							}
-							// Log.d("Speed",Speed+".");
-							Direction = Double.parseDouble(arr[2].trim());
-							// Log.d("Direction", Direction+".");
-							TimeStamp = Long.parseLong(arr[3].trim());  // 去除空白
-							// Log.d("TimeStamp", TimeStamp+".");
-							SenseRecord sRecord = new SenseRecord(TimeStamp, Speed, Direction);
-							DataList.add(sRecord);
+						} else {
+								Log.e("Wrong File Format!", "The first line should be \"#SENSOR\" or \"#OBD\"");
 						}
 					}
+					
 					bReader.close();
 					iStream.close();
 					DataFile.close();
