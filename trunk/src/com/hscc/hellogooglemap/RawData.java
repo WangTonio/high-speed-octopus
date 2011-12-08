@@ -8,13 +8,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import com.google.android.maps.GeoPoint;
+//import com.google.android.maps.GeoPoint;
 
 
 
 public class RawData{
-	GeoPoint StartPoint;
-	GeoPoint EndPoint;
+	//GeoPoint StartPoint;
+	//GeoPoint EndPoint;
 	public int totalIntersection = 0;	// total number of intersection in this Record set.
 	public ArrayList<SenseRecord> DataList = new ArrayList<SenseRecord>();
 	
@@ -22,12 +22,12 @@ public class RawData{
 		
 		
 		// For debug
-		double lat1 = 24.796699;
-		double lon1 = 120.997193;
-		double lat2 = 24.809574;
-		double lon2 = 120.983557;
-		StartPoint = new GeoPoint((int)(lat1 * 1000000), (int)(lon1 * 1000000));
-		EndPoint   = new GeoPoint((int)(lat2 * 1000000), (int)(lon2 * 1000000));
+		//double lat1 = 24.796699;
+		//double lon1 = 120.997193;
+		//double lat2 = 24.809574;
+		//double lon2 = 120.983557;
+		//StartPoint = new GeoPoint((int)(lat1 * 1000000), (int)(lon1 * 1000000));
+		//EndPoint   = new GeoPoint((int)(lat2 * 1000000), (int)(lon2 * 1000000));
 		
 		
 		// 從 SD 卡開啟檔案
@@ -84,12 +84,12 @@ public class RawData{
 					bReader.close();
 					iStream.close();
 					DataFile.close();
-					if (StartPoint.equals(null)){
-						Log.e("Wrong data format", "No Start Point!");
-					}
-					if (StartPoint.equals(null)){
-						Log.e("Wrong data format", "No End Point!");
-					}
+					//if (StartPoint.equals(null)){
+					//	Log.e("Wrong data format", "No Start Point!");
+					//}
+					//if (StartPoint.equals(null)){
+					//	Log.e("Wrong data format", "No End Point!");
+					//}
 				}
 			}
 		} catch (IOException e){

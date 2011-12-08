@@ -48,6 +48,7 @@ public class FindIntersection {
     		nextDest = myLine.Function(i);
     		
     		GetDirection(before1, nextDest);
+
     		try {Thread.sleep(250);} catch (InterruptedException e) {e.printStackTrace();}
     		
     		if(passPoint.size() > 2){
@@ -61,6 +62,7 @@ public class FindIntersection {
     						intersec = thistime;
     					}		
     				}
+
     			}
     			Log.e("路口", "經度 "+intersec.getLatitudeE6() + "路口緯度 "+intersec.getLongitudeE6());
     		}else{
@@ -68,7 +70,6 @@ public class FindIntersection {
     		}
     		
 
-    		
     		passPoint.clear();
     		
     		if(lookback){

@@ -20,18 +20,22 @@ public class AnalysisRawData {
 		
 	//初始化感測資料
 	private void initialization(String filename, boolean useOBD, int startPercent, int endPercent){
+		int startIdx, endIdx;
 		myData = new RawData(filename, useOBD, startPercent, endPercent);
 		mySize = myData.DataList.size();
-		fillIntersec();
+		startIdx = mySize * (startPercent/100);
+		endIdx   = mySize * (endPercent/100) - 1;
+		
+		fillIntersec(startIdx, endIdx);
 	}
 	
-	public void fillIntersec(){
+	public void fillIntersec(int startIdx, int endIdx){
 		counterType counter     = new counterType();
 		turnType    currentTurn = new turnType();
 		boolean	isRush = false;
 		int mid;
 		
-		for(int index = 1; index < mySize; index ++){
+		for(int index = startIdx; index <= endIdx; index ++){
 			isTurn(index, currentTurn);
 			
 			if(currentTurn.myTurn != currentTurn.NoTurn){         //有轉彎(承接上個轉彎或是新的轉彎)
@@ -39,7 +43,7 @@ public class AnalysisRawData {
 				if(isRush){//發生rush
 					mid = (index - counter.count/2);
 					myData.DataList.get(mid).Intersection = true;
-					totalIntersection++;
+					// totalIntersection++;
 					myData.totalIntersection++;
 					Log.d("路口","該點 TimeStamp :" + myData.DataList.get(mid).getTimeStamp());
 					//Log.d("路口","速度 :" + myData.DataList.get(mid).Speed);
