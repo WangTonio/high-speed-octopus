@@ -25,12 +25,13 @@ public class Tracking {
 	GeoPoint EndPoint;
 	public int queryTimes = 0;
 	public int MiddleIndex;
+	int listSize;
 	public int startIdx, endIdx;
 	
 	
 	public Tracking(String filename, boolean useOBD, int startPercent, int endPercent){
 		
-		int listSize;
+		
 
 		
 		// 0. 初始化資料
@@ -213,8 +214,23 @@ public class Tracking {
 						Log.d("Intersection", "RawLoacation, lat: "+location.getLatitudeE6()+", lon: "+location.getLongitudeE6());
 						
 						// 2. 找出轉彎前的兩個點, 以及轉彎後的一個點
-						beforeTurn1 = AnalyzedData.myData.DataList.get(i - BEFORE_TURN_PEROID).Location;
-						beforeTurn2 = AnalyzedData.myData.DataList.get(i - BEFORE_TURN_PEROID - 1).Location;
+						if ( i-BEFORE_TURN_PEROID > startIdx){
+							beforeTurn1 = AnalyzedData.myData.DataList.get(i - BEFORE_TURN_PEROID).Location;
+						} else if ( i-BEFORE_TURN_PEROID > 0){
+							beforeTurn1 = AnalyzedData.myData.DataList.get(i - BEFORE_TURN_PEROID).GPSLocation;
+						} else {
+							beforeTurn1 = AnalyzedData.myData.DataList.get(1).GPSLocation;
+						}
+						
+						if (i-BEFORE_TURN_PEROID-1 > startIdx){
+							beforeTurn2 = AnalyzedData.myData.DataList.get(i - BEFORE_TURN_PEROID - 1).Location;
+						} else if ( i-BEFORE_TURN_PEROID-1 >= 0){
+							beforeTurn2 = AnalyzedData.myData.DataList.get(i - BEFORE_TURN_PEROID - 1).GPSLocation;
+						} else {
+							beforeTurn2 = AnalyzedData.myData.DataList.get(0).GPSLocation;
+						}
+						
+						
 						
 						afterTurn = calAfterTurn(location, i, true);
 						
@@ -318,8 +334,22 @@ public class Tracking {
 						record.setLocation(location);
 						
 						// 找出轉彎前的兩個點, 以及轉彎後的一個點
-						beforeTurn1 = AnalyzedData.myData.DataList.get(i + BEFORE_TURN_PEROID - 1).Location;
-						beforeTurn2 = AnalyzedData.myData.DataList.get(i + BEFORE_TURN_PEROID).Location;						
+						if (i + BEFORE_TURN_PEROID - 1 < endIdx){
+							beforeTurn1 = AnalyzedData.myData.DataList.get(i + BEFORE_TURN_PEROID - 1).Location;
+						} else if (i + BEFORE_TURN_PEROID - 1 <= listSize){
+							beforeTurn1 = AnalyzedData.myData.DataList.get(i + BEFORE_TURN_PEROID - 1).GPSLocation;
+						} else {
+							beforeTurn1 = AnalyzedData.myData.DataList.get(listSize - 2).GPSLocation;
+						}
+						
+						if (i + BEFORE_TURN_PEROID < endIdx){
+							beforeTurn2 = AnalyzedData.myData.DataList.get(i + BEFORE_TURN_PEROID).Location;
+						} else if (i + BEFORE_TURN_PEROID - 1 <= listSize){
+							beforeTurn2 = AnalyzedData.myData.DataList.get(i + BEFORE_TURN_PEROID).GPSLocation;
+						} else {
+							beforeTurn2 = AnalyzedData.myData.DataList.get(listSize - 1).GPSLocation;
+						}
+												
 						afterTurn = calAfterTurn(location, i, false);
 
 						// Debug
