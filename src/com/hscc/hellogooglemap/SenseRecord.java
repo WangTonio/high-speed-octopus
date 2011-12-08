@@ -12,17 +12,18 @@ public class SenseRecord {
 	protected GeoPoint GPSLocation;
 	
 	
-	public SenseRecord(long timestamp, double speed, double direction){
+	public SenseRecord(long timestamp, double speed, double direction, double lat, double lon){
 		TimeStamp = timestamp;
 		Speed = speed;
 		Direction = direction;
+		GPSLocation = new GeoPoint((int)lat*1000000, (int)lon*1000000);
 		Intersection = false;
 	}
 	
 	public void setLocation(GeoPoint location){
 		Location = new GeoPoint(location.getLatitudeE6(), location.getLongitudeE6());
 	}
-	
+		
 	public void setIntersection(boolean a){
 		Intersection = a;
 	}	

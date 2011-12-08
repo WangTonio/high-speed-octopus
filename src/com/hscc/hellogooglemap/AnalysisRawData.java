@@ -12,14 +12,15 @@ public class AnalysisRawData {
 	public double R = 6371;                   //地球半徑(km)
 	public static final int GEO = 1000000;    //GeoPoint轉經緯度常數
 	
+	
 	//預設建構子
-	AnalysisRawData(boolean useOBD){
-		initialization(useOBD);
+	AnalysisRawData(String filename, boolean useOBD, int startPercent, int endPercent){	
+		initialization(filename, useOBD, startPercent, endPercent);
 	}
 		
 	//初始化感測資料
-	private void initialization(boolean useOBD) {
-		myData = new RawData(useOBD);
+	private void initialization(String filename, boolean useOBD, int startPercent, int endPercent){
+		myData = new RawData(filename, useOBD, startPercent, endPercent);
 		mySize = myData.DataList.size();
 		fillIntersec();
 	}
