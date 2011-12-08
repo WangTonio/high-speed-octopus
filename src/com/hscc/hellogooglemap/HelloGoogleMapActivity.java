@@ -84,6 +84,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	private List<GeoPoint> _points    = new ArrayList<GeoPoint>(); //hold the path signature
 	private List<GeoPoint> pathPoints = new ArrayList<GeoPoint>();
 	private ProgressDialog pd; //轉圈圈
+	public  int queryTime = 0;
 
 	public int progressMax = 50;
 	public int progressNow = 0;
@@ -179,27 +180,27 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	{
 		super.onCreateOptionsMenu(menu);
 		
-		menu.add(0, MENU_QUICK1, 0, "現在位置")
-			.setIcon(R.drawable.ic_menu_location);
+		menu.add(0, MENU_QUICK2, 0, "路徑重建")
+			.setIcon(R.drawable.ic_menu_to);
 		menu.add(0, MENU_QUICK4, 1, "選擇資料")
 			.setIcon(R.drawable.ic_menu_loopbin);
 		menu.add(0, MENU_ABOUT , 2, "設定GPS區間")
 			.setIcon(R.drawable.ic_menu_pin);
-		menu.add(0, MENU_QUICK2, 3, "路徑重建")
-			.setIcon(R.drawable.ic_menu_to);
+		menu.add(0, MENU_QUICK1, 3, "現在位置")
+			.setIcon(R.drawable.ic_menu_location);
 		menu.add(0, MENU_QUICK3, 4, "清除路徑")
 			.setIcon(R.drawable.ic_menu_garbage);
 		menu.add(0, MENU_QUIT  , 5, "結束")
 			.setIcon(R.drawable.ic_menu_icon1);
 		
-		menu.add(1, MENU_QUICK1, 0, "現在位置")
-			.setIcon(R.drawable.ic_menu_location);
+		menu.add(1, MENU_QUICK2, 0, "路徑重建")
+			.setIcon(R.drawable.ic_menu_to);
 		menu.add(1, MENU_QUICK4, 1, "選擇資料")
 			.setIcon(R.drawable.ic_menu_loopbin);
 		menu.add(1, MENU_ABOUT , 2, "設定GPS區間")
 			.setIcon(R.drawable.ic_menu_pin);
-		menu.add(1, MENU_QUICK2, 3, "路徑重建")
-			.setIcon(R.drawable.ic_menu_to);
+		menu.add(1, MENU_QUICK1, 3, "現在位置")
+			.setIcon(R.drawable.ic_menu_location);
 		menu.add(1, MENU_QUICK3, 4, "清除路徑")
 			.setIcon(R.drawable.ic_menu_garbage);
 		menu.add(1, MENU_QUIT  , 5, "結束")
@@ -267,7 +268,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 			SettingGPSinterval();
 			break;
 		case MENU_QUIT:
-			finish();
+			android.os.Process.killProcess(android.os.Process.myPid());
 			break;
 		}
 		return super.onOptionsItemSelected(item);
@@ -409,6 +410,8 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 				}
 				Log.d("切換 Activity","傳回資料: " + temp);
 				userSelectFileName = temp;
+				final TextView seekBarValueStart = (TextView)findViewById(R.id.Information);
+				seekBarValueStart.setText("資料："+temp);
 				setTitle(temp);
 			}
 		}
@@ -432,10 +435,14 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	
 	//建立一個新的執行緒，用來一邊跑進度圈圈一邊跑重建路徑，但受限於android API，MapView必須在handler那邊執行
 	public void run() {
-		TrackObj = new Tracking(isOBDusing);
+		TrackObj = new Tracking(userSelectFileName,isOBDusing,timeStart,timeEnd);
 		totalGPSdataSize = TrackObj.AnalyzedData.myData.DataList.size();
+		queryTime = TrackObj.queryTimes;
 		trackingResult = new ArrayList<GeoPoint>();
+		
+		
 		trackingResult.add(TrackObj.StartPoint);
+		
 		for(Intersection a : TrackObj.ForwardIntersection){
 			trackingResult.add(a.PredictLocation);
 		}
@@ -453,20 +460,23 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		public void handleMessage(Message msg) {
 			setview();
 			pd.dismiss();
+			Toast.makeText(HelloGoogleMapActivity.this, 
+					   "總共對 Google Query " + queryTime + " 次", Toast.LENGTH_SHORT).show();
 		}
 	};
 
 	
-	//處理使用者資料，在按下選擇資料來源之後
+	//路徑重建
 	private void processPathRecovery(){
 		
+
 		pd = ProgressDialog.show(this, "重建路徑中", 
 				"\n檔案名稱: " + userSelectFileName +
 				"\n資料來源: " + returnOBD() +
 				"\n正在與 Google Map 溝通" +
 				"\n需要時間依網路狀況而定" +
 				"\n請耐心稍後!"
-				, true, false);
+				, true, true);
 
 		Thread thread = new Thread(this);
 		thread.start();
@@ -556,6 +566,19 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	public double toDeg(double number){
 		return number*180.0/Math.PI;
 	}
+	
+	//變數監聽
+	public VariableChangeListener variableChangeListener;
+	public interface VariableChangeListener {
+        public void onVariableChanged(int variableThatHasChanged);
+    }
+	
+	public void setVariableChangeListener(VariableChangeListener variableChangeListener) {
+	       this.variableChangeListener = variableChangeListener;
+	    }
+	
+	
+
 	
 /* *** 以下是 Google Path 要求 ****/
 	//The following function is made for PATH CALCULATION	
