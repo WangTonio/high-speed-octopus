@@ -495,17 +495,24 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	}
 	
 	//在所有的GPS座標群內化簡 index 從 indexStart 到 indexEnd 的點集
-	public void eliminateGpsPoint(int indexStart, int indexEnd){
+	public void eliminateGpsPoint(int indexStartPercent, int indexEndPercent){
 		ArrayList<Location> temp =  new ArrayList<Location>();
 		ArrayList<Location> rslt =  new ArrayList<Location>();
 		ArrayList<SenseRecord> curn = new ArrayList<SenseRecord>();
 		int target = 0;
-		if(indexStart == 1){ //表示現在是在 tracking 前端
-			target = 1;
-		}else if(indexEnd == totalGPSdataSize){ //表示現在是在 tracking 後端
-			target = 2;
-		}
+		int indexStart = 0;
+		int indexEnd = 0;
 		
+		if(indexStartPercent == 0){ //表示現在是在 tracking 前端
+			target = 1;
+			indexStart = 0;
+			indexEnd = totalGPSdataSize * indexEndPercent /100;
+		}else if(indexEndPercent == 100){ //表示現在是在 tracking 後端
+			target = 2;
+			indexStart = totalGPSdataSize * indexStartPercent /100;
+			indexEnd = totalGPSdataSize;
+		}
+			
 		//將所有GPS皆放入temp裡面
 		for(SenseRecord involve: TrackObj.AnalyzedData.myData.DataList ){
 			curn.add(involve);
