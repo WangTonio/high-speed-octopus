@@ -439,6 +439,8 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		totalGPSdataSize = TrackObj.AnalyzedData.myData.DataList.size();
 		queryTime = TrackObj.queryTimes;
 		trackingResult = new ArrayList<GeoPoint>();
+		eliminateGpsPoint(0,timeStart);
+		eliminateGpsPoint(timeEnd,100);
 		
 		
 		trackingResult.add(TrackObj.StartPoint);
