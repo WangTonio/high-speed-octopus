@@ -55,7 +55,7 @@ public class Tracking {
 		
 		 
 	
-		// 1. 從 RawData 中找出所有的 intersection
+		
 		int numIntersection = AnalyzedData.myData.totalIntersection;
 		
 		int count = 0;
@@ -65,38 +65,51 @@ public class Tracking {
 		Log.d("numIntersection", "(use percent): "+numIntersection);		
 		Log.d("DataList size", ""+(startIdx-endIdx+1));
 		
-		for (int i = startIdx; i <= endIdx; i++){
-			if (AnalyzedData.myData.DataList.get(i).Intersection == true){
-				if (count < (int)(numIntersection/2)){
-					ForwardIntersection.add(new Intersection(i));
-					Log.e("ForwardIntersection", "count: " + count + ". Index: " + i);
-				} else {
-					BackwardIntersection.add(new Intersection(i));
-					Log.e("BackwardIntersection", "count: " + (count-numIntersection/2) + ". Index: " + i);
+		if (size > 0){
+		
+			// 1. 從 RawData 中找出所有的 intersection
+			for (int i = startIdx; i <= endIdx; i++){
+				if (AnalyzedData.myData.DataList.get(i).Intersection == true){
+					if (count < (int)(numIntersection/2)){
+						ForwardIntersection.add(new Intersection(i));
+						Log.e("ForwardIntersection", "count: " + count + ". Index: " + i);
+					} else {
+						BackwardIntersection.add(new Intersection(i));
+						Log.e("BackwardIntersection", "count: " + (count-numIntersection/2) + ". Index: " + i);
+					}
+					count++;
 				}
-				count++;
 			}
+			
+			// 2. 找出中間點
+			int a, b;
+			
+			if (ForwardIntersection.size() > 0){
+				int fi = ForwardIntersection.size() - 1;
+				a = ForwardIntersection.get(fi).Index;
+			} else {
+				a = startIdx;
+			}
+			
+			if (BackwardIntersection.size()>0){
+				b = BackwardIntersection.get(0).Index;
+			} else {
+				b = endIdx;
+			}
+			
+			MiddleIndex = (a + b) / 2;
+			
+			// Debug
+			Log.e("MiddleIndex", "a:"+ a + ", b:" + b +", Mid:"+MiddleIndex);
+	
+			
+			// 3. startTracking
+			boolean isSuccess = startTracking();
+			
+			
+			// 4. calculate path
+			CalculatePath(isSuccess);
 		}
-		
-		// 2. 找出中間點
-		int a, b;
-		int fi = ForwardIntersection.size() - 1;
-
-		a = ForwardIntersection.get(fi).Index;
-		b = BackwardIntersection.get(0).Index;
-		MiddleIndex = (a + b) / 2;
-		
-		// Debug
-		Log.d("Middleindex", "F intersection list size: "+fi);
-		Log.e("MiddleIndex", "a:"+ a + ", b:" + b +", Mid:"+MiddleIndex);
-
-		
-		// 3. startTracking
-		boolean isSuccess = startTracking();
-		
-		
-		// 4. calculate path
-		CalculatePath(isSuccess);
 		
 	}
 	
