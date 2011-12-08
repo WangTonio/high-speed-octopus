@@ -65,7 +65,7 @@ public class Tracking {
 		Log.d("numIntersection", "(use percent): "+numIntersection);		
 		Log.d("DataList size", ""+(startIdx-endIdx+1));
 		
-		if (size > 0){
+		if (numIntersection > 0){
 		
 			// 1. 從 RawData 中找出所有的 intersection
 			for (int i = startIdx; i <= endIdx; i++){
@@ -109,6 +109,9 @@ public class Tracking {
 			
 			// 4. calculate path
 			CalculatePath(isSuccess);
+		
+		} else { // numIntersection <= 0
+			CalculatePath(false);
 		}
 		
 	}
@@ -225,6 +228,10 @@ public class Tracking {
 						
 						// 3. 使用 FindIntersec 找出 PredictIntersection
 						predictLocation = iCalculator.findIntersec(beforeTurn1, beforeTurn2, afterTurn, true, 0);
+						if (predictLocation.equals(null)){
+							predictLocation = ForwardIntersection.get(Fi).RawLocation;
+						}
+						queryTimes++;
 						
 						// Debug
 						Log.d("Predict Intersection", "Lat: "+ predictLocation.getLatitudeE6()+", Lon: "+predictLocation.getLongitudeE6());
@@ -324,6 +331,10 @@ public class Tracking {
 						
 						// 使用 FindIntersec 找出 PredictIntersection
 						predictLocation = iCalculator.findIntersec(beforeTurn1, beforeTurn2, afterTurn, true, 0);
+						if (predictLocation.equals(null)){
+							predictLocation = BackwardIntersection.get(Bi).RawLocation;
+						}
+						queryTimes++;
 
 						// 記錄 PredictionLocation
 						BackwardIntersection.get(Bi).setPredictLocation(predictLocation);
@@ -467,8 +478,15 @@ public class Tracking {
 				y = BackwardIntersection.get(1).PredictLocation;
 				tempList = f.GetDirection(x, y);
 				queryTimes++;
-				tempList.remove(0);
-				ReturnList.addAll(tempList);
+				
+				if (tempList.size() > 0){
+					tempList.remove(0);
+					ReturnList.addAll(tempList);
+				} else {	// 
+					ReturnList.add(y);
+					Log.d("Empty List", "Get Empty List between intersection from Google.");
+				}
+				
 				
 				// 連接  Backward 剩下的 intersection
 				for (int i = 2; i < Bsize; i++){
@@ -482,8 +500,13 @@ public class Tracking {
 				y = EndPoint;
 				tempList = f.GetDirection(x, y);
 				queryTimes++;
-				tempList.remove(0);
-				ReturnList.addAll(tempList);
+				if (tempList.size() > 0){
+					tempList.remove(0);
+					ReturnList.addAll(tempList);
+				} else {	// 
+					ReturnList.add(y);
+					Log.d("Empty List", "Get Empty List between intersection from Google.");
+				}
 			}
 		}
 	}
