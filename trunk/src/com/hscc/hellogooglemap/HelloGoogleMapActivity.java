@@ -103,11 +103,14 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
     int timeEnd   = 100;
     public String userSelectFileName;
 	protected Tracking TrackObj;
-	private List<GeoPoint> FrontGPS;
-	private List<GeoPoint> trackingResult;
-	private List<GeoPoint> BackGPS;
+	private List<GeoPoint> FrontGPS = new ArrayList<GeoPoint>();
+	private List<GeoPoint> trackingResult = new ArrayList<GeoPoint>();
+	private List<GeoPoint> BackGPS = new ArrayList<GeoPoint>();
+	private List<GeoPoint> MiddleGPS = new ArrayList<GeoPoint>();
 	private int totalGPSdataSize = 0;
 	List<com.google.android.maps.Overlay> ol;
+	List<com.google.android.maps.Overlay> ol2;
+	List<com.google.android.maps.Overlay> ol3;
 	
 	protected final LocationListener LocListener = new LocationListener(){
 		public void onLocationChanged(Location location) {
@@ -260,6 +263,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		case MENU_QUICK3: //清除路徑
 		case MENU_STOP:
 			ol.clear();	
+			ol2.clear();
 			break;
 		case MENU_QUICK4: //選擇資料
 			SelectData();
@@ -289,7 +293,8 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		alertDialog.setButton("重建", new DialogInterface.OnClickListener() 
 		{
 			public void onClick(DialogInterface dialog, int whichButton) {
-				
+				Toast.makeText(HelloGoogleMapActivity.this, "請您稍後，等待路徑重建完成", Toast.LENGTH_LONG).show();
+				processPathRecovery();
 			}
 		});
 
@@ -421,7 +426,16 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	public void setview(){
 		ol = mapView.getOverlays();
         ol.clear();
+        
+        if(isGpsDisplay){
+        	ol3 = mapView.getOverlays();
+        	ol3.add(new MyMapOverlay3());
+        }
         ol.add(new MyMapOverlay());
+        
+        ol2 = mapView.getOverlays();
+        ol2.add(new MyMapOverlay2());
+         
         mapView.invalidate();
         
         
@@ -441,7 +455,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		trackingResult = new ArrayList<GeoPoint>();
 		eliminateGpsPoint(0,timeStart);
 		eliminateGpsPoint(timeEnd,100);
-		
+		eliminateGpsPoint(timeStart,timeEnd);
 		
 		trackingResult.add(TrackObj.StartPoint);
 		
@@ -511,6 +525,10 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 			target = 2;
 			indexStart = totalGPSdataSize * indexStartPercent /100;
 			indexEnd = totalGPSdataSize;
+		}else{
+			target = 3;
+			indexStart = totalGPSdataSize * indexStartPercent /100;
+			indexEnd = totalGPSdataSize * indexEndPercent /100;
 		}
 			
 		//將所有GPS皆放入temp裡面
@@ -529,22 +547,33 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		
 		reduceGPS mGPS = new reduceGPS();
 		if(target == 1){
-			mGPS.decimate(150f,temp,rslt);
+			mGPS.decimate(2f,temp,rslt);
+			Log.w("Reduce","front size : " + rslt.size());
 			for(Location now: rslt){
-				int lat = (int)(now.getLatitude()/GEO);
-				int lng = (int)(now.getLongitude()/GEO);
+				int lat = (int)(now.getLatitude()*GEO);
+				int lng = (int)(now.getLongitude()*GEO);
 				GeoPoint b = new GeoPoint(lat,lng);
 				FrontGPS.add(b);
 			}
-		}else{
-			mGPS.decimate(150f,temp,rslt);
+		}else if(target == 2){
+			mGPS.decimate(2f,temp,rslt);
 			for(Location now: rslt){
-				int lat = (int)(now.getLatitude()/GEO);
-				int lng = (int)(now.getLongitude()/GEO);
+				Log.w("Reduce","front size : " + rslt.size());
+				int lat = (int)(now.getLatitude()*GEO);
+				int lng = (int)(now.getLongitude()*GEO);
 				GeoPoint b = new GeoPoint(lat,lng);
 				BackGPS.add(b);
 			}
-		}	
+		}else{
+			mGPS.decimate(2f,temp,rslt);
+			for(Location now: rslt){
+				Log.w("Reduce","front size : " + rslt.size());
+				int lat = (int)(now.getLatitude()*GEO);
+				int lng = (int)(now.getLongitude()*GEO);
+				GeoPoint b = new GeoPoint(lat,lng);
+				MiddleGPS.add(b);
+			}
+		}
 	}
 
 	//計算兩個 GeoPoint 間的夾角
@@ -576,18 +605,6 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		return number*180.0/Math.PI;
 	}
 	
-	//變數監聽
-	public VariableChangeListener variableChangeListener;
-	public interface VariableChangeListener {
-        public void onVariableChanged(int variableThatHasChanged);
-    }
-	
-	public void setVariableChangeListener(VariableChangeListener variableChangeListener) {
-	       this.variableChangeListener = variableChangeListener;
-	    }
-	
-	
-
 	
 /* *** 以下是 Google Path 要求 ****/
 	//The following function is made for PATH CALCULATION	
@@ -722,13 +739,16 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	            Point out = new Point();
 	            Path myPath = new Path();
 	                          
-	            Paint myPaint = new Paint();
-	            myPaint.setStyle(Paint.Style.STROKE);
-	            myPaint.setStrokeWidth(7);
-	            myPaint.setAlpha(255);
+	            Paint myPaintBLUE = new Paint();
+	            
+	            myPaintBLUE.setStyle(Paint.Style.STROKE);
+	            myPaintBLUE.setStrokeWidth(7);
+	            myPaintBLUE.setAlpha(255);
+	            myPaintBLUE.setColor(Color.BLUE);
+	            
                 boolean turn = true;
                 
-                myPaint.setColor(Color.BLUE);
+                
 	            for(GeoPoint point : trackingResult){
 	            	if(turn){
 	            		out = p.toPixels(point, out);
@@ -737,13 +757,42 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	            	}else{
 	            		out = p.toPixels(point, out);
 	                    myPath.lineTo(out.x, out.y);
-	                	canvas.drawPath(myPath, myPaint);
+	                	canvas.drawPath(myPath, myPaintBLUE);
 	                	myPath.moveTo(out.x, out.y);	
 	            	}
 				}  
+	             
+	            mapView.invalidate();
+	        }
+	        return true;
+	    }
+	}
+		
+	class MyMapOverlay2 extends com.google.android.maps.Overlay
+	{	
+		// 畫路徑
+	    @Override
+	    public boolean draw(Canvas canvas, MapView mapView, boolean shadow, long when)
+	    {
+	        super.draw(canvas, mapView, shadow);
+	        
+	        //turnCir++;
+	        if( true )
+	        {
+	            Projection p = mapView.getProjection();
+	            Point out = new Point();
+	            Path myPath = new Path();
+	                          
+	            Paint myPaint = new Paint();
 	            
-	            turn = true;
+	            myPaint.setStyle(Paint.Style.STROKE);
+	            myPaint.setStrokeWidth(7);
+	            myPaint.setAlpha(255);
 	            myPaint.setColor(Color.RED);
+	            
+	            
+                boolean turn = true;
+	            
 	            for(GeoPoint point : FrontGPS){
 	            	if(turn){
 	            		out = p.toPixels(point, out);
@@ -758,7 +807,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 				}  
 	            
 	            turn = true;
-	            myPaint.setColor(Color.RED);
+	            
 	            for(GeoPoint point : BackGPS){
 	            	if(turn){
 	            		out = p.toPixels(point, out);
@@ -777,7 +826,55 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	        return true;
 	    }
 	}
-		
+	
+	class MyMapOverlay3 extends com.google.android.maps.Overlay
+	{	
+		// 畫路徑
+	    @Override
+	    public boolean draw(Canvas canvas, MapView mapView, boolean shadow, long when)
+	    {
+	        super.draw(canvas, mapView, shadow);
+	        
+	        //turnCir++;
+	        if( true )
+	        {
+	            Projection p = mapView.getProjection();
+	            Point out = new Point();
+	            Path myPath = new Path();
+	                          
+	            Paint myPaint = new Paint();
+	            
+	            myPaint.setStyle(Paint.Style.STROKE);
+	            myPaint.setStrokeWidth(7);
+	            myPaint.setAlpha(40);
+	            myPaint.setColor(Color.BLACK);
+	            
+	            
+                boolean turn = true;
+	            
+	            for(GeoPoint point : MiddleGPS){
+	            	if(turn){
+	            		out = p.toPixels(point, out);
+	            		myPath.moveTo(out.x, out.y);
+	                    turn = false;
+	            	}else{
+	            		out = p.toPixels(point, out);
+	                    myPath.lineTo(out.x, out.y);
+	                	canvas.drawPath(myPath, myPaint);
+	                	myPath.moveTo(out.x, out.y);	
+	            	}
+				}  
+	            
+	            mapView.invalidate();
+	        }
+	        return true;
+	    }
+	}
+	
+	
+	
+	
+	
 	class RecordPathOverlay extends com.google.android.maps.Overlay
 	{
 		@Override
