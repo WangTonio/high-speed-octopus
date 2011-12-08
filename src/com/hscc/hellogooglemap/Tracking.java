@@ -22,8 +22,10 @@ public class Tracking {
 	List<GeoPoint> ReturnList = new ArrayList<GeoPoint>();
 	GeoPoint StartPoint;
 	GeoPoint EndPoint;
+	public int queryTimes = 0;
 	public int MiddleIndex;
 	public int startIdx, endIdx;
+	
 	
 	public Tracking(String filename, boolean useOBD, int startPercent, int endPercent){
 		
@@ -437,6 +439,7 @@ public class Tracking {
 			
 			ReturnList.add(StartPoint);
 			prePoint = StartPoint;
+			
 			if(Fsize > 1){
 				for (int i = 0; i < Fsize - 1; i++){
 					ReturnList.add(ForwardIntersection.get(i).PredictLocation);
@@ -450,6 +453,7 @@ public class Tracking {
 				x = prePoint;
 				y = BackwardIntersection.get(1).PredictLocation;
 				tempList = f.GetDirection(x, y);
+				queryTimes++;
 				tempList.remove(0);
 				ReturnList.addAll(tempList);
 				
@@ -464,6 +468,7 @@ public class Tracking {
 				x = prePoint;
 				y = EndPoint;
 				tempList = f.GetDirection(x, y);
+				queryTimes++;
 				tempList.remove(0);
 				ReturnList.addAll(tempList);
 			}
