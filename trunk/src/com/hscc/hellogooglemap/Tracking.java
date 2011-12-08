@@ -14,7 +14,8 @@ public class Tracking {
 	public static final double DISTANCE_RANGE = 0.1326;
 	public static final int BEFORE_TURN_PEROID = 10;
 	public static final int AFTER_TURN_PEROID = 20;
-	
+	final int GEO = 1000000;
+	GeoPoint taipei_station   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
 	
 	public AnalysisRawData AnalyzedData;
 	public ArrayList<Intersection> ForwardIntersection;
@@ -228,7 +229,7 @@ public class Tracking {
 						
 						// 3. 使用 FindIntersec 找出 PredictIntersection
 						predictLocation = iCalculator.findIntersec(beforeTurn1, beforeTurn2, afterTurn, true, 0);
-						if (predictLocation.equals(null)){
+						if (predictLocation.equals(taipei_station)){
 							predictLocation = ForwardIntersection.get(Fi).RawLocation;
 						}
 						queryTimes++;
@@ -331,7 +332,7 @@ public class Tracking {
 						
 						// 使用 FindIntersec 找出 PredictIntersection
 						predictLocation = iCalculator.findIntersec(beforeTurn1, beforeTurn2, afterTurn, true, 0);
-						if (predictLocation.equals(null)){
+						if (predictLocation.equals(taipei_station)){
 							predictLocation = BackwardIntersection.get(Bi).RawLocation;
 						}
 						queryTimes++;
