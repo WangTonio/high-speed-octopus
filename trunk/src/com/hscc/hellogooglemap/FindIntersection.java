@@ -27,6 +27,7 @@ public class FindIntersection {
 	GeoPoint before2;
 	GeoPoint after;
 	GeoPoint taipei_station   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
+	public int QueryTime = 0;
 	
 	public FindIntersection(){
 	}
@@ -66,7 +67,7 @@ public class FindIntersection {
     			}
     			Log.e("路口", "經度 "+intersec.getLatitudeE6() + "路口緯度 "+intersec.getLongitudeE6());
     		}else{
-    			Log.e("路口", "資料裡沒有路口");
+    			Log.e("路口", "資料裡沒有路口，Google傳回的點個數為0個");
     		}
     		
 
@@ -105,6 +106,7 @@ public class FindIntersection {
 	//The following function is made for PATH CALCULATION	
 	public List<GeoPoint> GetDirection(GeoPoint StartPoint ,GeoPoint Destination)
 	{
+		QueryTime++;
 	    String mapAPI = "http://maps.google.com/maps/api/directions/json?origin={0}&destination={1}&language=zh-TW&sensor=true";
 	    String url = MessageFormat.format(mapAPI, ExtraLocation(StartPoint),ExtraLocation(Destination));
 
