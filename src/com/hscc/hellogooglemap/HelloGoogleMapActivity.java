@@ -453,6 +453,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		TrackObj = new Tracking(userSelectFileName,isOBDusing,timeStart,timeEnd);
 		totalGPSdataSize = TrackObj.AnalyzedData.myData.DataList.size();
 		queryTime = TrackObj.queryTimes;
+		Log.w("Query¦¸¼Æ","" + queryTime);
 		trackingResult = new ArrayList<GeoPoint>();
 		eliminateGpsPoint(0,timeStart);
 		eliminateGpsPoint(timeEnd,100);
@@ -570,7 +571,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 				FrontGPS.add(b);
 			}
 		}else if(target == 2){
-			mGPS.decimate(2f,temp,rslt);
+			mGPS.decimate(12f,temp,rslt);
 			Log.w("Reduce","front size : " + rslt.size());
 			for(Location now: rslt){
 				int lat = (int)(now.getLatitude()*GEO);
