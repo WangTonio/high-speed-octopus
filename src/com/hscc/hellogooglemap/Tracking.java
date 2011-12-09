@@ -30,13 +30,11 @@ public class Tracking {
 	public int MiddleIndex;
 	int listSize;
 	public int startIdx, endIdx;
+	FindIntersection iCalculator = new FindIntersection();
 	
 	
 	public Tracking(String filename, boolean useOBD, int startPercent, int endPercent){
-		
-		
-
-		
+	
 		// 0. 初始化資料
 		AnalyzedData = new AnalysisRawData(filename, useOBD, startPercent, endPercent);  
 		ForwardIntersection = new ArrayList<Intersection>();
@@ -57,9 +55,6 @@ public class Tracking {
 				AnalyzedData.myData.DataList.get(endIdx).GPSLocation.getLatitudeE6(),
 				AnalyzedData.myData.DataList.get(endIdx).GPSLocation.getLongitudeE6()
 				);
-		
-		 
-	
 		
 		int numIntersection = AnalyzedData.myData.totalIntersection;
 		
@@ -116,7 +111,7 @@ public class Tracking {
 			CalculatePath(isSuccess);
 		
 		} else { // numIntersection <= 0
-			CalculatePath(false);
+			ReturnList.addAll(iCalculator.GetDirection(StartPoint, EndPoint));
 		}
 		
 	}
@@ -175,7 +170,7 @@ public class Tracking {
 		
 		GeoPoint beforeTurn1, beforeTurn2;
 		GeoPoint afterTurn;
-		FindIntersection iCalculator = new FindIntersection();
+		
 		
 		Fi = 0;
 		record = AnalyzedData.myData.DataList.get(startIdx);
@@ -319,7 +314,6 @@ public class Tracking {
 		GeoPoint location, predictLocation;;
 		GeoPoint beforeTurn1, beforeTurn2;
 		GeoPoint afterTurn;
-		FindIntersection iCalculator = new FindIntersection();
 		
 		Bi = Bsize - 1;
 		

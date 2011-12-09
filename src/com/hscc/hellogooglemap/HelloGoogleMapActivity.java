@@ -469,13 +469,20 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		}
 		*/
 		
+		int g_count = 0;
+		List<GeoPoint> tempList;
 		GeoPoint g;
 		for(SenseRecord a : TrackObj.AnalyzedData.myData.DataList){
 			g = a.getLocation();
 			if (g!=null){
 				trackingResult.add(g);
+				g_count++;
 			}
-			
+		}
+		if (g_count == 0){
+			tempList = TrackObj.getResult();
+			tempList.remove(0);
+			trackingResult.addAll(tempList);
 		}
 		
 		trackingResult.add(TrackObj.EndPoint);
