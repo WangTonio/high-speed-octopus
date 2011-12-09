@@ -50,8 +50,6 @@ public class FindIntersection {
     		
     		GetDirection(before1, nextDest);
 
-    		try {Thread.sleep(250);} catch (InterruptedException e) {e.printStackTrace();}
-    		
     		if(passPoint.size() > 0){
     			for(GeoPoint thistime : passPoint)
     			{
@@ -74,11 +72,6 @@ public class FindIntersection {
     		passPoint.clear();
     		
     		if(lookback){
-    			try {
-    				Thread.sleep(900);
-    			} catch (InterruptedException e) {
-    				e.printStackTrace();
-    			}
     			nextDest = myLine.Function(-i);
     			GetDirection(before1, nextDest);
     			for(GeoPoint thistime : passPoint)
@@ -106,6 +99,11 @@ public class FindIntersection {
 	//The following function is made for PATH CALCULATION	
 	public List<GeoPoint> GetDirection(GeoPoint StartPoint ,GeoPoint Destination)
 	{
+		try {
+			Thread.sleep(900);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		QueryTime++;
 	    String mapAPI = "http://maps.google.com/maps/api/directions/json?origin={0}&destination={1}&language=zh-TW&sensor=true";
 	    String url = MessageFormat.format(mapAPI, ExtraLocation(StartPoint),ExtraLocation(Destination));
