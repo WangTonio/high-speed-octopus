@@ -11,9 +11,11 @@ public class Tracking {
 	
 	// 常數定義
 	public static final double RECORD_INTERVAL = 0.2;   // SENSOR 每 0.2 秒記錄一筆資料
+	public static final double BEFORE_TURN_DISTANCE = 0.003;
 	public static final double DISTANCE_RANGE = 0.1326;
 	public static final int BEFORE_TURN_PEROID = 10;
 	public static final int AFTER_TURN_PEROID = 20;
+	
 	final int GEO = 1000000;
 	GeoPoint taipei_station   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
 	public int QueryTime = 0;
@@ -162,10 +164,15 @@ public class Tracking {
 		SenseRecord record;
 		int Fsize = ForwardIntersection.size();
 		int Fi;
+		
 		double direction;
 		double distance;
 		double deltaDistance;
 		GeoPoint location, predictLocation;
+		
+		double averageBrng;
+		int beforeIdx1, beforeIdx2;
+		
 		GeoPoint beforeTurn1, beforeTurn2;
 		GeoPoint afterTurn;
 		FindIntersection iCalculator = new FindIntersection();
@@ -194,7 +201,7 @@ public class Tracking {
 				record.setLocation(location);
 
 				// for debug
-				Log.e("ForwardTracking "+ i, "lat: "+location.getLatitudeE6()+". lon: "+location.getLongitudeE6());
+				// Log.e("ForwardTracking "+ i, "lat: "+location.getLatitudeE6()+". lon: "+location.getLongitudeE6());
 
 				
 			} else {
@@ -215,22 +222,37 @@ public class Tracking {
 						Log.d("Intersection", "RawLoacation, lat: "+location.getLatitudeE6()+", lon: "+location.getLongitudeE6());
 						
 						// 2. 找出轉彎前的兩個點, 以及轉彎後的一個點
-						if ( i-BEFORE_TURN_PEROID > startIdx){
-							beforeTurn1 = AnalyzedData.myData.DataList.get(i - BEFORE_TURN_PEROID).Location;
-						} else if ( i-BEFORE_TURN_PEROID > 0){
-							beforeTurn1 = AnalyzedData.myData.DataList.get(i - BEFORE_TURN_PEROID).GPSLocation;
+						// 
+						// 
+						
+						beforeIdx1 = i-BEFORE_TURN_PEROID;
+						beforeIdx2 = i-BEFORE_TURN_PEROID - 1;
+						
+						if ( beforeIdx1 > startIdx){
+							beforeTurn1 = AnalyzedData.myData.DataList.get(beforeIdx1).Location;
+						} else if ( beforeIdx1 > 0){
+							beforeTurn1 = AnalyzedData.myData.DataList.get(beforeIdx1).GPSLocation;
 						} else {
 							beforeTurn1 = AnalyzedData.myData.DataList.get(1).GPSLocation;
+							beforeIdx1 = 1;
 						}
 						
-						if (i-BEFORE_TURN_PEROID-1 > startIdx){
-							beforeTurn2 = AnalyzedData.myData.DataList.get(i - BEFORE_TURN_PEROID - 1).Location;
-						} else if ( i-BEFORE_TURN_PEROID-1 >= 0){
-							beforeTurn2 = AnalyzedData.myData.DataList.get(i - BEFORE_TURN_PEROID - 1).GPSLocation;
+						if (beforeIdx2 > startIdx){
+							beforeTurn2 = AnalyzedData.myData.DataList.get(beforeIdx2).Location;
+						} else if (beforeIdx2 >= 0){
+							beforeTurn2 = AnalyzedData.myData.DataList.get(beforeIdx2).GPSLocation;
 						} else {
 							beforeTurn2 = AnalyzedData.myData.DataList.get(0).GPSLocation;
+							beforeIdx2 = 0;
 						}
 						
+						if (beforeTurn2.equals(beforeTurn1)){
+							averageBrng = (AnalyzedData.myData.DataList.get(beforeIdx1).Direction 
+										+ AnalyzedData.myData.DataList.get(beforeIdx2).Direction) / 2;
+							beforeTurn2 = AnalyzedData.findDest(beforeTurn1, (averageBrng+180)%360, BEFORE_TURN_DISTANCE);
+							Log.d("Equal Before Turn", "Cal new beforeTurn2");
+							Log.d("New BeforeTurn2", "Lat: " + beforeTurn2.getLatitudeE6() + ", Lon: " + beforeTurn2.getLongitudeE6());
+						}
 						
 						
 						afterTurn = calAfterTurn(location, i, true);
@@ -248,11 +270,12 @@ public class Tracking {
 						predictLocation = iCalculator.findIntersec(beforeTurn1, beforeTurn2, afterTurn, true, 0);
 						if (predictLocation.equals(taipei_station)){
 							predictLocation = ForwardIntersection.get(Fi).RawLocation;
+							Log.d("FindIntsc failed", "Index: "+i);
 						}
 						queryTimes++;
 						
 						// Debug
-						Log.d("Predict Intersection", "Lat: "+ predictLocation.getLatitudeE6()+", Lon: "+predictLocation.getLongitudeE6());
+						Log.d("Predict Intersection", "Fi: " + Fi + "Lat: "+ predictLocation.getLatitudeE6()+", Lon: "+predictLocation.getLongitudeE6());
 
 						
 						// 4. 記錄 PredictionLocation
@@ -289,6 +312,10 @@ public class Tracking {
 		double direction;
 		double distance;
 		double deltaDistance;
+		
+		double averageBrng;
+		int beforeIdx1, beforeIdx2;
+		
 		GeoPoint location, predictLocation;;
 		GeoPoint beforeTurn1, beforeTurn2;
 		GeoPoint afterTurn;
@@ -318,14 +345,14 @@ public class Tracking {
 				distance = record.getSpeed()*RECORD_INTERVAL/1000;	
 				location = AnalyzedData.findDest(location, direction, distance);
 				record.setLocation(location);
-				Log.d("BackwardTracking " + i, "Lat: "+location.getLatitudeE6()+", Lon: "+location.getLongitudeE6());
+				// Log.d("BackwardTracking " + i, "Lat: "+location.getLatitudeE6()+", Lon: "+location.getLongitudeE6());
 				
 			} else {
 				
 				if (Bi >= 0) {
 					if(BackwardIntersection.get(Bi).Index == i){
 						
-						// 計算出 RawLocation
+						// 1. 計算出 RawLocation
 						direction = (record.getDirection() + 180) % 360;	// Backward tracking, 方向相反
 						distance = record.getSpeed()*RECORD_INTERVAL/1000;	
 						location = AnalyzedData.findDest(location, direction, distance);
@@ -334,21 +361,33 @@ public class Tracking {
 						// for debug
 						record.setLocation(location);
 						
-						// 找出轉彎前的兩個點, 以及轉彎後的一個點
-						if (i + BEFORE_TURN_PEROID - 1 < endIdx){
-							beforeTurn1 = AnalyzedData.myData.DataList.get(i + BEFORE_TURN_PEROID - 1).Location;
-						} else if (i + BEFORE_TURN_PEROID - 1 <= listSize){
-							beforeTurn1 = AnalyzedData.myData.DataList.get(i + BEFORE_TURN_PEROID - 1).GPSLocation;
+						// 2. 找出轉彎前的兩個點, 以及轉彎後的一個點
+						beforeIdx1 = i + BEFORE_TURN_PEROID - 1;
+						beforeIdx2 = i + BEFORE_TURN_PEROID;
+						if (beforeIdx1 < endIdx){
+							beforeTurn1 = AnalyzedData.myData.DataList.get(beforeIdx1).Location;
+						} else if (beforeIdx1 <= listSize){
+							beforeTurn1 = AnalyzedData.myData.DataList.get(beforeIdx1).GPSLocation;
 						} else {
 							beforeTurn1 = AnalyzedData.myData.DataList.get(listSize - 2).GPSLocation;
+							beforeIdx1 = listSize - 2;
 						}
 						
-						if (i + BEFORE_TURN_PEROID < endIdx){
-							beforeTurn2 = AnalyzedData.myData.DataList.get(i + BEFORE_TURN_PEROID).Location;
+						if (beforeIdx2 < endIdx){
+							beforeTurn2 = AnalyzedData.myData.DataList.get(beforeIdx2).Location;
 						} else if (i + BEFORE_TURN_PEROID - 1 <= listSize){
-							beforeTurn2 = AnalyzedData.myData.DataList.get(i + BEFORE_TURN_PEROID).GPSLocation;
+							beforeTurn2 = AnalyzedData.myData.DataList.get(beforeIdx2).GPSLocation;
 						} else {
 							beforeTurn2 = AnalyzedData.myData.DataList.get(listSize - 1).GPSLocation;
+							beforeIdx2 = listSize - 1;
+						}
+						
+						if (beforeTurn2.equals(beforeTurn1)){
+							averageBrng = (AnalyzedData.myData.DataList.get(beforeIdx1).Direction 
+										+ AnalyzedData.myData.DataList.get(beforeIdx2).Direction) / 2;
+							beforeTurn2 = AnalyzedData.findDest(beforeTurn1, averageBrng, BEFORE_TURN_DISTANCE);
+							Log.d("Equal Before Turn", "Cal new beforeTurn2");
+							Log.d("New BeforeTurn2", "Lat: " + beforeTurn2.getLatitudeE6() + ", Lon: " + beforeTurn2.getLongitudeE6());
 						}
 												
 						afterTurn = calAfterTurn(location, i, false);
@@ -361,18 +400,22 @@ public class Tracking {
 						
 						
 						
-						// 使用 FindIntersec 找出 PredictIntersection
+						// 3. 使用 FindIntersec 找出 PredictIntersection
 						predictLocation = iCalculator.findIntersec(beforeTurn1, beforeTurn2, afterTurn, true, 0);
 						if (predictLocation.equals(taipei_station)){
 							predictLocation = BackwardIntersection.get(Bi).RawLocation;
+							Log.d("FindIntsc failed", "intersection index: "+Bi);
 						}
 						queryTimes++;
+						
+						// Debug
+						Log.d("Predict Intersection", "Bi: " + Bi + "Lat: "+ predictLocation.getLatitudeE6()+", Lon: "+predictLocation.getLongitudeE6());
 
-						// 記錄 PredictionLocation
+						// 4. 記錄 PredictionLocation
 						BackwardIntersection.get(Bi).setPredictLocation(predictLocation);
 						record.setLocation(predictLocation);
 						
-						// 計算 DeltaDistance
+						// 5. 計算 DeltaDistance
 						deltaDistance = AnalyzedData.distance(
 											BackwardIntersection.get(Bi).PredictLocation, 
 											BackwardIntersection.get(Bi).RawLocation);
