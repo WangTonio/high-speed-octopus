@@ -16,6 +16,7 @@ public class Tracking {
 	public static final int AFTER_TURN_PEROID = 20;
 	final int GEO = 1000000;
 	GeoPoint taipei_station   = new GeoPoint( (int)(25.047192*GEO),(int)(121.516981*GEO));
+	public int QueryTime = 0;
 	
 	public AnalysisRawData AnalyzedData;
 	public ArrayList<Intersection> ForwardIntersection;
@@ -508,7 +509,7 @@ public class Tracking {
 				x = prePoint;
 				y = BackwardIntersection.get(1).PredictLocation;
 				tempList = f.GetDirection(x, y);
-				queryTimes++;
+				queryTimes = f.QueryTime;
 				
 				if (tempList.size() > 0){
 					tempList.remove(0);
@@ -530,7 +531,7 @@ public class Tracking {
 				x = prePoint;
 				y = EndPoint;
 				tempList = f.GetDirection(x, y);
-				queryTimes++;
+				queryTimes = f.QueryTime;
 				if (tempList.size() > 0){
 					tempList.remove(0);
 					ReturnList.addAll(tempList);
