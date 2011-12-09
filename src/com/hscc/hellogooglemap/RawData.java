@@ -17,6 +17,7 @@ public class RawData{
 	//GeoPoint EndPoint;
 	public int totalIntersection = 0;	// total number of intersection in this Record set.
 	public ArrayList<SenseRecord> DataList = new ArrayList<SenseRecord>();
+	public boolean isOBD = false;
 	
 	public RawData(String filename, boolean useOBD, int startPercent, int endPercent){
 		
@@ -53,6 +54,8 @@ public class RawData{
 						String[] arr = InputLine.split(" ");
 						
 						if ( arr[0].equals("#SENSOR") || arr[0].equals("#OBD")){
+							if (arr[0].equals("#SENSOR")){ isOBD = false; }
+							if (arr[0].equals("#OBD")){ isOBD = true; }
 							
 							while((InputLine = bReader.readLine())!=null){
 
