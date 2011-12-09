@@ -51,7 +51,7 @@ public class FindIntersection {
 
     		try {Thread.sleep(250);} catch (InterruptedException e) {e.printStackTrace();}
     		
-    		if(passPoint.size() > 2){
+    		if(passPoint.size() > 0){
     			for(GeoPoint thistime : passPoint)
     			{
     				if ( !(thistime.equals(before1)) && !(thistime.equals(nextDest))){

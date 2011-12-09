@@ -107,6 +107,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	private List<GeoPoint> trackingResult = new ArrayList<GeoPoint>();
 	private List<GeoPoint> BackGPS = new ArrayList<GeoPoint>();
 	private List<GeoPoint> MiddleGPS = new ArrayList<GeoPoint>();
+	private List<GeoPoint> trackingResultElm = new ArrayList<GeoPoint>();
 	private int totalGPSdataSize = 0;
 	List<com.google.android.maps.Overlay> ol;
 	List<com.google.android.maps.Overlay> ol2;
@@ -458,14 +459,27 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		eliminateGpsPoint(timeStart,timeEnd);
 		
 		trackingResult.add(TrackObj.StartPoint);
-		
+		/*
 		for(Intersection a : TrackObj.ForwardIntersection){
 			trackingResult.add(a.PredictLocation);
 		}
 		for(Intersection b : TrackObj.BackwardIntersection){
 			trackingResult.add(b.PredictLocation);
 		}
+		*/
+		
+		GeoPoint g;
+		for(SenseRecord a : TrackObj.AnalyzedData.myData.DataList){
+			g = a.getLocation();
+			if (g!=null){
+				trackingResult.add(g);
+			}
+			
+		}
+		
 		trackingResult.add(TrackObj.EndPoint);
+		
+		eliminateGpsPoint2();
 		//trackingResult = TrackObj.getResult();
 		handler.sendEmptyMessage(0);
 	}
@@ -517,7 +531,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		int indexStart = 0;
 		int indexEnd = 0;
 		
-		if(indexStartPercent == 0){ //表示現在是在 tracking 前端
+		if(indexStartPercent == 0 && indexEndPercent!= 0){ //表示現在是在 tracking 前端
 			target = 1;
 			indexStart = 0;
 			indexEnd = totalGPSdataSize * indexEndPercent /100;
@@ -547,7 +561,7 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		
 		reduceGPS mGPS = new reduceGPS();
 		if(target == 1){
-			mGPS.decimate(2f,temp,rslt);
+			mGPS.decimate(12f,temp,rslt);
 			Log.w("Reduce","front size : " + rslt.size());
 			for(Location now: rslt){
 				int lat = (int)(now.getLatitude()*GEO);
@@ -557,17 +571,17 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 			}
 		}else if(target == 2){
 			mGPS.decimate(2f,temp,rslt);
+			Log.w("Reduce","front size : " + rslt.size());
 			for(Location now: rslt){
-				Log.w("Reduce","front size : " + rslt.size());
 				int lat = (int)(now.getLatitude()*GEO);
 				int lng = (int)(now.getLongitude()*GEO);
 				GeoPoint b = new GeoPoint(lat,lng);
 				BackGPS.add(b);
 			}
 		}else{
-			mGPS.decimate(2f,temp,rslt);
+			mGPS.decimate(12f,temp,rslt);
+			Log.w("Reduce","front size : " + rslt.size());
 			for(Location now: rslt){
-				Log.w("Reduce","front size : " + rslt.size());
 				int lat = (int)(now.getLatitude()*GEO);
 				int lng = (int)(now.getLongitude()*GEO);
 				GeoPoint b = new GeoPoint(lat,lng);
@@ -576,6 +590,35 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 		}
 	}
 
+	//在所有的GPS座標群內化簡 index 從 indexStart 到 indexEnd 的點集
+	public void eliminateGpsPoint2(){
+		ArrayList<Location> temp =  new ArrayList<Location>();
+		ArrayList<Location> rslt =  new ArrayList<Location>();
+		ArrayList<SenseRecord> curn = new ArrayList<SenseRecord>();
+		
+		for(GeoPoint a : trackingResult){
+			Location now = new Location("");
+			float latitude =  a.getLatitudeE6() / 1000000F;
+			float longitude = a.getLongitudeE6() / 1000000F;
+			now.setLatitude(latitude);
+			now.setLongitude(longitude);
+			temp.add(now);
+		}
+		
+		reduceGPS mGPS = new reduceGPS();
+		if(true){
+			mGPS.decimate(12f,temp,rslt);
+			Log.w("Reduce","front size : " + rslt.size());
+			for(Location now: rslt){
+				int lat = (int)(now.getLatitude()*GEO);
+				int lng = (int)(now.getLongitude()*GEO);
+				GeoPoint b = new GeoPoint(lat,lng);
+				trackingResultElm.add(b);
+			}
+		}
+
+	}
+	
 	//計算兩個 GeoPoint 間的夾角
 	public double bearing(GeoPoint start, GeoPoint dest){
 		double lat1 = toRad((double)start.getLatitudeE6()/GEO);
@@ -748,8 +791,8 @@ public class HelloGoogleMapActivity extends MapActivity implements Runnable {
 	            
                 boolean turn = true;
                 
-                
-	            for(GeoPoint point : trackingResult){
+	            //for(GeoPoint point : trackingResult){
+                for(GeoPoint point : trackingResultElm){
 	            	if(turn){
 	            		out = p.toPixels(point, out);
 	            		myPath.moveTo(out.x, out.y);
